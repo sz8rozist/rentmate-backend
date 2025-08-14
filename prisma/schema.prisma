@@ -4,9 +4,9 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+generator nestgraphql {
+  provider = "prisma-nestjs-graphql"
+  output   = "../src/@generated"
 }
 
 datasource db {
@@ -41,6 +41,7 @@ model Flat {
   tenants  User[]   @relation("TenantFlat")
   images   FlatImage[] @relation("FlatImages")
   message Message[] @relation("MessageFlat")
+  flatDocument FlatDocument[] @relation("FlatDocuments")
 }
 
 model FlatImage {
@@ -69,8 +70,8 @@ model Message {
 model FlatDocument {
   id      Int  @id @default(autoincrement())
   url     String
-  flat    Flat    @relation(fields: [flatId], references: [id])
-  flatId  String
+  flat    Flat    @relation("FlatDocuments", fields: [flatId], references: [id])
+  flatId  Int
   uploadedAt DateTime @default(now())
 }
 
