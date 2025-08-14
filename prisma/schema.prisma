@@ -10,6 +10,60 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id      Int      @id @default(autoincrement())
+  email   String   @unique
+  name    String
+  password String 
+  role    UserRole
+  flatId    Int?   // ha a tenant-hoz tartozó lakás opcionális
+  flat      Flat?  @relation("TenantFlat", fields: [flatId], references: [id])
+  ownedFlats Flat[] @relation("LandlordFlats") //landlordhoz
+  messages Message[] @relation("SenderUser") //üzenetekhez
+}
+
+enum UserRole {
+  landlord
+  tenant
+}
+
+model Flat {
+  id       Int      @id @default(autoincrement())
+  address  String
+  price    Int
+  status   FlatStatus
+  landlordId Int
+  landlord  User    @relation("LandlordFlats", fields: [landlordId], references: [id])
+  tenants  User[]   @relation("TenantFlat")
+  images   FlatImage[] @relation("FlatImages")
+  message Message[] @relation("MessageFlat")
+}
+
+model FlatImage {
+  id     Int      @id @default(autoincrement())
+  url    String
+  path   String
+  flatId Int
+  flat   Flat @relation("FlatImages", fields: [flatId], references: [id])
+}
+
+enum FlatStatus {
+  available
+  rented
+}
+
+model Message {
+  id        Int       @id @default(autoincrement())
+  flatId   Int
+  senderId Int
+  flat     Flat @relation("MessageFlat", fields: [flatId], references: [id])
+  sender   User @relation("SenderUser", fields: [senderId], references: [id])
+  content   String
+  createdAt DateTime  @default(now())
+  imageUrls String?   // JSON tömb stringként
+}
+
