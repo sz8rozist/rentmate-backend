@@ -3,8 +3,7 @@ import { FlatService } from "./flat.service";
 import { FlatRequestInput } from "./dto/flat-request.input";
 import { UsePipes, ValidationPipe } from "@nestjs/common";
 import GraphQLUpload, * as GraphQLUpload_1 from "graphql-upload/GraphQLUpload.mjs";
-import { Flat } from "src/@generated/flat/flat.model";
-
+import { Flat } from "./flat-entity";
 @Resolver()
 export class FlatResolver {
   constructor(private flatService: FlatService) {}
@@ -12,11 +11,26 @@ export class FlatResolver {
   @Mutation(() => Flat)
   @UsePipes(new ValidationPipe())
   async addFlat(
-    @Args("data") data: FlatRequestInput,
-    @Args({ name: "image", type: () => GraphQLUpload })
-    image: GraphQLUpload_1.FileUpload
+    @Args("data") data: FlatRequestInput
   ) {
-    return this.flatService.addFlat(data, image);
+    return this.flatService.addFlat(data);
+  }
+
+  @Mutation(() => Boolean)
+  async uploadFlatImage(
+    @Args("flatId", { type: () => Int }) flatId: number,
+    @Args({ name: "image", type: () => GraphQLUpload }) image: GraphQLUpload_1.FileUpload
+  ): Promise<boolean> {
+    await this.flatService.uploadFlatImage(flatId, image);
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  async deleteFlatImage(
+    @Args("imageId", { type: () => Int }) imageId: number
+  ): Promise<boolean> {
+    await this.flatService.deleteFlatImage(imageId);
+    return true;
   }
 
   @Mutation(() => Flat)
@@ -42,6 +56,11 @@ export class FlatResolver {
   ): Promise<boolean> {
     await this.flatService.addTenantToFlat(flatId, tenantId);
     return true;
+  }
+
+   @Query(() => Flat, { nullable: true, description: "Get a flat by its ID" })
+  async flatById(@Args('id', { type: () => Int }) id: number) {
+    return this.flatService.getFlatById(id);
   }
 
   @Mutation(() => Boolean)

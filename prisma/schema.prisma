@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator nestgraphql {
   provider = "prisma-nestjs-graphql"
   output   = "../src/@generated"
@@ -15,15 +9,55 @@ datasource db {
 }
 
 model User {
-  id      Int      @id @default(autoincrement())
-  email   String   @unique
-  name    String
-  password String 
-  role    UserRole
-  flatId    Int?   // ha a tenant-hoz tartozó lakás opcionális
-  flat      Flat?  @relation("TenantFlat", fields: [flatId], references: [id])
-  ownedFlats Flat[] @relation("LandlordFlats") //landlordhoz
-  messages Message[] @relation("SenderUser") //üzenetekhez
+  id         Int       @id @default(autoincrement())
+  email      String    @unique
+  name       String
+  role       UserRole
+  flatId     Int?
+  password   String
+  ownedFlats Flat[]    @relation("LandlordFlats")
+  messages   Message[] @relation("SenderUser")
+  flat       Flat?     @relation("TenantFlat", fields: [flatId], references: [id])
+
+  @@index([flatId], map: "User_flatId_fkey")
+}
+
+model Flat {
+  id         Int         @id @default(autoincrement())
+  address    String
+  price      Int
+  status     FlatStatus
+  landlordId Int
+  landlord   User        @relation("LandlordFlats", fields: [landlordId], references: [id])
+  images     FlatImage[] @relation("FlatImages")
+  messages   Message[]   @relation("MessageFlat")
+  tenants    User[]      @relation("TenantFlat")
+
+  @@index([landlordId], map: "Flat_landlordId_fkey")
+}
+
+model FlatImage {
+  id     Int    @id @default(autoincrement())
+  url    String
+  path   String
+  flatId Int
+  flat   Flat   @relation("FlatImages", fields: [flatId], references: [id])
+
+  @@index([flatId], map: "FlatImage_flatId_fkey")
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  flatId    Int
+  senderId  Int
+  content   String
+  createdAt DateTime @default(now())
+  imageUrls String?
+  flat      Flat     @relation("MessageFlat", fields: [flatId], references: [id])
+  sender    User     @relation("SenderUser", fields: [senderId], references: [id])
+
+  @@index([flatId], map: "Message_flatId_fkey")
+  @@index([senderId], map: "Message_senderId_fkey")
 }
 
 enum UserRole {
@@ -31,47 +65,7 @@ enum UserRole {
   tenant
 }
 
-model Flat {
-  id       Int      @id @default(autoincrement())
-  address  String
-  price    Int
-  status   FlatStatus
-  landlordId Int
-  landlord  User    @relation("LandlordFlats", fields: [landlordId], references: [id])
-  tenants  User[]   @relation("TenantFlat")
-  images   FlatImage[] @relation("FlatImages")
-  message Message[] @relation("MessageFlat")
-  flatDocument FlatDocument[] @relation("FlatDocuments")
-}
-
-model FlatImage {
-  id     Int      @id @default(autoincrement())
-  url    String
-  flatId Int
-  flat   Flat @relation("FlatImages", fields: [flatId], references: [id])
-}
-
 enum FlatStatus {
   available
   rented
 }
-
-model Message {
-  id        Int       @id @default(autoincrement())
-  flatId   Int
-  senderId Int
-  flat     Flat @relation("MessageFlat", fields: [flatId], references: [id])
-  sender   User @relation("SenderUser", fields: [senderId], references: [id])
-  content   String
-  createdAt DateTime  @default(now())
-  imageUrls String?   // JSON tömb stringként
-}
-
-model FlatDocument {
-  id      Int  @id @default(autoincrement())
-  url     String
-  flat    Flat    @relation("FlatDocuments", fields: [flatId], references: [id])
-  flatId  Int
-  uploadedAt DateTime @default(now())
-}
-

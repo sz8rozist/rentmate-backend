@@ -7,6 +7,7 @@ import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { FileModule } from './file/file.module';
 import { FlatModule } from './flat/flat.module';
+import { ChatModule } from './chat/chat.module';
 @Module({
   imports: [
      GraphQLModule.forRoot<ApolloDriverConfig>({
@@ -17,6 +18,7 @@ import { FlatModule } from './flat/flat.module';
      AuthModule,
      FileModule,
      FlatModule,
+     ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

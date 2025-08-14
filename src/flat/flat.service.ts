@@ -1,8 +1,9 @@
-import { Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
 import { FileService } from "../file/file.service";
 import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
-import { FlatStatus } from "src/@generated/prisma/flat-status.enum";
+import { AppException } from "src/common/exception/app.exception";
+import { FlatStatus } from "./flat-status";
 
 @Injectable()
 export class FlatService {
@@ -11,25 +12,35 @@ export class FlatService {
     private fileService: FileService
   ) {}
 
-  async addFlat(
-    data: { address: string; price: number; landlordId: number },
-    image: FileUpload
-  ) {
-    // Kép feltöltése MinIO-ba
-    const imageUrl = await this.fileService.uploadFile(image, "flats");
-
+  async addFlat(data: { address: string; price: number; landlordId: number }) {
     // Lakás létrehozása az adatbázisban
     const flat = await this.prisma.flat.create({
       data: {
         address: data.address,
         price: data.price,
         landlordId: data.landlordId,
-        images: {
-          create: [{ url: imageUrl }],
-        },
       },
       include: { images: true },
     });
+    return flat;
+  }
+
+  async getFlatById(flatId: number) {
+    const flat = await this.prisma.flat.findUnique({
+      where: { id: flatId },
+      include: {
+        images: true,
+        tenants: true,
+        landlord: true,
+        flatDocument: true,
+        message: true,
+      },
+    });
+
+    if (!flat) {
+      throw new AppException(`Flat with id ${flatId} not found`, HttpStatus.NOT_FOUND);
+    }
+
     return flat;
   }
 
@@ -50,7 +61,10 @@ export class FlatService {
     return { success: true };
   }
 
-  async updateFlat(flatId: number, data: { address?: string; price?: number, status?: FlatStatus }) {
+  async updateFlat(
+    flatId: number,
+    data: { address?: string; price?: number; status?: FlatStatus }
+  ) {
     return this.prisma.flat.update({
       where: { id: flatId },
       data,
@@ -111,5 +125,25 @@ export class FlatService {
         message: true,
       },
     });
+  }
+  async uploadFlatImage(flatId: number, image: FileUpload) {
+    // Kép feltöltése MinIO-ba
+    const imageUrl = await this.fileService.uploadFile(image, "flats");
+    // Kép mentése az adatbázisba
+    await this.prisma.flatImage.create({
+      data: {
+        url: imageUrl,
+        flatId: flatId,
+      },
+    });
+    return true;
+  }
+
+  async deleteFlatImage(imageId: number) {
+    // Kép törlése az adatbázisból
+    await this.prisma.flatImage.delete({
+      where: { id: imageId },
+    });
+    return true;
   }
 }
