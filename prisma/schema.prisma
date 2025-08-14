@@ -46,7 +46,6 @@ model Flat {
 model FlatImage {
   id     Int      @id @default(autoincrement())
   url    String
-  path   String
   flatId Int
   flat   Flat @relation("FlatImages", fields: [flatId], references: [id])
 }
@@ -65,5 +64,13 @@ model Message {
   content   String
   createdAt DateTime  @default(now())
   imageUrls String?   // JSON tömb stringként
+}
+
+model FlatDocument {
+  id      Int  @id @default(autoincrement())
+  url     String
+  flat    Flat    @relation(fields: [flatId], references: [id])
+  flatId  String
+  uploadedAt DateTime @default(now())
 }
 

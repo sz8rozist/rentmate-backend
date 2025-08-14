@@ -5,6 +5,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
+import { FileModule } from './file/file.module';
 @Module({
   imports: [
      GraphQLModule.forRoot<ApolloDriverConfig>({
@@ -13,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
       playground: true, // fejlesztéshez hasznos
     }),
      AuthModule,
+     FileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
