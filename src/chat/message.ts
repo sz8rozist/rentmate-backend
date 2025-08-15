@@ -1,14 +1,16 @@
 import { ObjectType, Field, ID, Int } from "@nestjs/graphql";
+import { User } from "src/auth/user";
+import { Flat } from "src/flat/flat";
 
 @ObjectType()
 export class Message {
-  @Field(type => ID)
+  @Field(() => ID)
   id: number;
 
-  @Field(type => Int)
+  @Field(() => Int)
   flatId: number;
 
-  @Field(type => Int)
+  @Field(() => Int)
   senderId: number;
 
   @Field()
@@ -19,4 +21,11 @@ export class Message {
 
   @Field({ nullable: true })
   imageUrls?: string;
+
+  // Kapcsolatok (relations)
+  @Field(() => Flat)
+  flat: Flat;
+
+  @Field(() => User)
+  sender: User;
 }

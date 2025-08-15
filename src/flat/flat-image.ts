@@ -1,4 +1,5 @@
 import { ObjectType, Field, ID, Int } from "@nestjs/graphql";
+import { Flat } from "./flat";
 
 @ObjectType()
 export class FlatImage {
@@ -8,9 +9,10 @@ export class FlatImage {
   @Field()
   url: string;
 
-  @Field()
-  path: string;
-
   @Field(type => Int)
   flatId: number;
+
+  // Kapcsolat (relation)
+  @Field(() => Flat)
+  flat: Flat;
 }

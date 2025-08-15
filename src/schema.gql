@@ -1,0 +1,104 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type PublicUser {
+  id: Int!
+  email: String!
+  name: String!
+  role: UserRole!
+  flatId: Int
+}
+
+enum UserRole {
+  landlord
+  tenant
+}
+
+type Message {
+  id: ID!
+  flatId: Int!
+  senderId: Int!
+  content: String!
+  createdAt: DateTime!
+  imageUrls: String
+  flat: Flat!
+  sender: User!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  role: UserRole!
+  flatId: Int
+  password: String!
+  ownedFlats: [Flat!]!
+  messages: [Message!]!
+  flat: Flat
+}
+
+type FlatImage {
+  id: ID!
+  url: String!
+  flatId: Int!
+  flat: Flat!
+}
+
+type Flat {
+  id: ID!
+  address: String!
+  price: Int!
+  status: FlatStatus!
+  landlordId: Int!
+  landlord: User!
+  images: [FlatImage!]!
+  messages: [Message!]!
+  tenants: [User!]!
+}
+
+enum FlatStatus {
+  available
+  rented
+}
+
+type Query {
+  """Get a flat by its ID"""
+  flatById(id: Int!): Flat
+  getFlatForTenant(tenantId: Int!): Flat
+  getFlatsForLandlord(landlordId: Int!): [Flat!]!
+}
+
+type Mutation {
+  login(email: String!, password: String!): String!
+  register(data: RegisterInput!): PublicUser!
+  uploadFile(file: Upload!, folder: String!): String!
+  addFlat(data: FlatRequestInput!): Flat!
+  uploadFlatImages(flatId: Int!, images: [Upload!]!): Boolean!
+  deleteFlatImage(imageId: Int!): Boolean!
+  updateFlat(flatId: Int!, data: FlatRequestInput!): Flat!
+  deleteFlat(flatId: Int!): Boolean!
+  addTenantToFlat(flatId: Int!, tenantId: Int!): Boolean!
+  removeTenantFromFlat(tenantId: Int!): Boolean!
+}
+
+input RegisterInput {
+  email: String!
+  name: String!
+  password: String!
+  role: UserRole!
+}
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
+
+input FlatRequestInput {
+  address: String!
+  price: Int!
+  landlordId: Int!
+}

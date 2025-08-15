@@ -4,6 +4,7 @@ import { FileService } from "../file/file.service";
 import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
 import { AppException } from "src/common/exception/app.exception";
 import { FlatStatus } from "./flat-status";
+import { FlatRequestInput } from "./dto/flat-request.input";
 
 @Injectable()
 export class FlatService {
@@ -12,10 +13,11 @@ export class FlatService {
     private fileService: FileService
   ) {}
 
-  async addFlat(data: { address: string; price: number; landlordId: number }) {
+  async addFlat(data: FlatRequestInput) {
     // Lakás létrehozása az adatbázisban
     const flat = await this.prisma.flat.create({
       data: {
+        status: FlatStatus.available,
         address: data.address,
         price: data.price,
         landlordId: data.landlordId,
@@ -32,8 +34,7 @@ export class FlatService {
         images: true,
         tenants: true,
         landlord: true,
-        flatDocument: true,
-        message: true,
+        messages: true,
       },
     });
 
@@ -47,7 +48,6 @@ export class FlatService {
   async deleteFlat(flatId: number) {
     // Törlés előtt minden kapcsolódó rekordot törlünk
     await this.prisma.flatImage.deleteMany({ where: { flatId } });
-    await this.prisma.flatDocument.deleteMany({ where: { flatId } });
     await this.prisma.message.deleteMany({ where: { flatId } });
     // Ha van tenant kapcsolat, azt is törölheted, pl. flatId nullázása
     await this.prisma.user.updateMany({
@@ -72,8 +72,7 @@ export class FlatService {
         images: true,
         tenants: true,
         landlord: true,
-        flatDocument: true,
-        message: true,
+        messages: true,
       },
     });
   }
@@ -104,8 +103,7 @@ export class FlatService {
             images: true,
             landlord: true,
             tenants: true,
-            flatDocument: true,
-            message: true,
+            messages: true,
           },
         },
       },
@@ -118,11 +116,7 @@ export class FlatService {
     return this.prisma.flat.findMany({
       where: { landlordId },
       include: {
-        images: true,
-        tenants: true,
         landlord: true,
-        flatDocument: true,
-        message: true,
       },
     });
   }

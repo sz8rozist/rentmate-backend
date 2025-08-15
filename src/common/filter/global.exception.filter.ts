@@ -2,45 +2,41 @@
 import {
   ExceptionFilter,
   Catch,
-  ArgumentsHost,
-  HttpException,
   HttpStatus,
-} from '@nestjs/common';
-import { GqlArgumentsHost } from '@nestjs/graphql';
-import { AppException } from '../exception/app.exception';
+  BadRequestException,
+  ArgumentsHost,
+} from "@nestjs/common";
+import { AppException } from "../exception/app.exception";
+import { GraphQLError } from "graphql";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
-    const gqlHost = GqlArgumentsHost.create(host);
-    const ctx = gqlHost.getContext();
-    const response = {
-      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Internal server error',
-      error: 'INTERNAL_ERROR',
-    };
 
-    if (exception instanceof AppException) {
-      response.statusCode = exception.getStatus();
-      response.message = exception.message;
-      response.error = exception.error;
-    } else if (exception instanceof HttpException) {
-      const res = exception.getResponse() as any;
-      response.statusCode = exception.getStatus();
-      response.message = res.message || res;
-      response.error = res.error || 'HTTP_ERROR';
-    } else if (Array.isArray(exception) && exception[0]?.constraints) {
-      // class-validator hibák
-      response.statusCode = HttpStatus.BAD_REQUEST;
-      response.message = exception
-        .map(e =>
-          Object.values(e.constraints).map(msg => `${e.property}: ${msg}`)
-        )
-        .flat()
-        .join(', ');
-      response.error = 'VALIDATION_ERROR';
+    if (exception instanceof BadRequestException) {
+      const response = exception.getResponse(); // ez már a formattedErrors tömb
+      throw new GraphQLError("Validation failed", {
+        extensions: {
+          code: "BAD_REQUEST",
+          validationErrors: response,
+        },
+      });
     }
 
-    return response;
+    if (exception instanceof AppException) {
+      throw new GraphQLError(exception.message, {
+        extensions: {
+          code: exception.error ?? "APP_ERROR",
+          status: exception.getStatus(),
+        },
+      });
+    } 
+
+    // Más hibák
+    throw new GraphQLError(
+      exception.message || "Internal server error",
+      { extensions: { code: "INTERNAL_ERROR" } , nodes: undefined,
+        source: undefined,}
+    );
   }
 }

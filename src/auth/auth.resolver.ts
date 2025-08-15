@@ -2,6 +2,8 @@ import { Resolver, Mutation, Args } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import { RegisterInput } from './dto/register.input';
 import { AppException } from 'src/common/exception/app.exception';
+import { PublicUser } from './dto/user.response';
+import { UsePipes, ValidationPipe } from '@nestjs/common';
 
 @Resolver()
 export class AuthResolver {
@@ -15,8 +17,11 @@ export class AuthResolver {
     return token.access_token;
   }
 
-  @Mutation(() => String)
-  async register(@Args('input') input: RegisterInput): Promise<string> {
-    return await this.authService.register(input);
+  @Mutation(() => PublicUser)
+  @UsePipes(new ValidationPipe())
+  async register(@Args('data') data: RegisterInput): Promise<PublicUser> {
+    const user = await this.authService.findUserByEmail(data.email);
+    if (user) throw new AppException('Ez az email cím már foglalt!', 400, 'USER_EXISTS');
+    return await this.authService.register(data);
   }
 }

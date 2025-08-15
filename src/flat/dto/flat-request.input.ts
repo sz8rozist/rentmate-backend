@@ -1,6 +1,6 @@
 import { InputType, Field, Int } from "@nestjs/graphql";
 import { IsNotEmpty, IsString, IsInt, Min } from "class-validator";
-import { FlatStatus } from "src/@generated/prisma/flat-status.enum";
+import { FlatStatus } from "../flat-status";
 
 @InputType()
 export class FlatRequestInput {
@@ -13,10 +13,6 @@ export class FlatRequestInput {
   @IsInt()
   @Min(0)
   price: number;
-
-  @Field(() => FlatStatus, { nullable: false })
-  @IsNotEmpty()
-  status: FlatStatus;
 
   @Field(() => Int)
   @IsInt()

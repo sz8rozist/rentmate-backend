@@ -1,6 +1,5 @@
 generator nestgraphql {
-  provider = "prisma-nestjs-graphql"
-  output   = "../src/@generated"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -39,7 +38,6 @@ model Flat {
 model FlatImage {
   id     Int    @id @default(autoincrement())
   url    String
-  path   String
   flatId Int
   flat   Flat   @relation("FlatImages", fields: [flatId], references: [id])
 

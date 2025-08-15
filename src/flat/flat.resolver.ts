@@ -3,7 +3,8 @@ import { FlatService } from "./flat.service";
 import { FlatRequestInput } from "./dto/flat-request.input";
 import { UsePipes, ValidationPipe } from "@nestjs/common";
 import GraphQLUpload, * as GraphQLUpload_1 from "graphql-upload/GraphQLUpload.mjs";
-import { Flat } from "./flat-entity";
+import { Flat } from "./flat";
+import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
 @Resolver()
 export class FlatResolver {
   constructor(private flatService: FlatService) {}
@@ -16,12 +17,13 @@ export class FlatResolver {
     return this.flatService.addFlat(data);
   }
 
-  @Mutation(() => Boolean)
-  async uploadFlatImage(
-    @Args("flatId", { type: () => Int }) flatId: number,
-    @Args({ name: "image", type: () => GraphQLUpload }) image: GraphQLUpload_1.FileUpload
+ @Mutation(() => Boolean)
+  async uploadFlatImages(
+    @Args('flatId', { type: () => Int }) flatId: number,
+    @Args({ name: 'images', type: () => [GraphQLUpload] }) images: FileUpload[],
   ): Promise<boolean> {
-    await this.flatService.uploadFlatImage(flatId, image);
+    // Párhuzamos feltöltés
+    await Promise.all(images.map(image => this.flatService.uploadFlatImage(flatId, image)));
     return true;
   }
 

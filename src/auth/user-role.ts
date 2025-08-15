@@ -4,5 +4,6 @@ export enum UserRole {
   landlord = 'landlord',
   tenant = 'tenant',
 }
-
-registerEnumType(UserRole, { name: 'UserRole' });
+registerEnumType(UserRole, {
+  name: 'UserRole',
+});

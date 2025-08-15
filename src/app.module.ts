@@ -8,17 +8,20 @@ import { AuthModule } from './auth/auth.module';
 import { FileModule } from './file/file.module';
 import { FlatModule } from './flat/flat.module';
 import { ChatModule } from './chat/chat.module';
+import { PrismaModule } from './prisma/prisma.module';
 @Module({
   imports: [
      GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       playground: true, // fejlesztéshez hasznos
+      debug: false, // ez tiltja a stack trace-t
     }),
      AuthModule,
      FileModule,
      FlatModule,
      ChatModule,
+     PrismaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
