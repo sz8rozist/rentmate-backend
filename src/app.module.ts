@@ -9,7 +9,7 @@ import { FileModule } from './file/file.module';
 import { FlatModule } from './flat/flat.module';
 import { ChatModule } from './chat/chat.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { PubsubModule } from './pubsub/pubsub.module';
+import { PubSubModule } from './pubsub/pubsub.module';
 @Module({
   imports: [
      GraphQLModule.forRoot<ApolloDriverConfig>({
@@ -23,7 +23,7 @@ import { PubsubModule } from './pubsub/pubsub.module';
      FlatModule,
      ChatModule,
      PrismaModule,
-     PubsubModule,
+     PubSubModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -10,8 +10,7 @@ export class FileResolver {
   @Mutation(() => String)
   async uploadFile(
     @Args({ name: 'file', type: () => GraphQLUpload }) file: FileUpload,
-    @Args('folder') folder: string,
   ): Promise<string> {
-    return this.fileService.uploadFile(file, folder);
+    return this.fileService.uploadFile(file);
   }
 }

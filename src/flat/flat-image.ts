@@ -9,6 +9,9 @@ export class FlatImage {
   @Field()
   url: string;
 
+  @Field()
+  filename: string;
+
   @Field(type => Int)
   flatId: number;
 

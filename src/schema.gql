@@ -17,11 +17,11 @@ enum UserRole {
 
 type Message {
   id: ID!
-  flatId: Int!
-  senderId: Int!
+  flatId: Float!
+  senderId: Float!
   content: String!
   createdAt: DateTime!
-  imageUrls: String
+  imageUrls: [String!]
   flat: Flat!
   sender: User!
 }
@@ -46,6 +46,7 @@ type User {
 type FlatImage {
   id: ID!
   url: String!
+  filename: String!
   flatId: Int!
   flat: Flat!
 }
@@ -72,12 +73,13 @@ type Query {
   flatById(id: Int!): Flat
   getFlatForTenant(tenantId: Int!): Flat
   getFlatsForLandlord(landlordId: Int!): [Flat!]!
+  messages(flatId: Int!): [Message!]!
 }
 
 type Mutation {
   login(email: String!, password: String!): String!
   register(data: RegisterInput!): PublicUser!
-  uploadFile(file: Upload!, folder: String!): String!
+  uploadFile(file: Upload!): String!
   addFlat(data: FlatRequestInput!): Flat!
   uploadFlatImages(flatId: Int!, images: [Upload!]!): Boolean!
   deleteFlatImage(imageId: Int!): Boolean!
@@ -85,6 +87,7 @@ type Mutation {
   deleteFlat(flatId: Int!): Boolean!
   addTenantToFlat(flatId: Int!, tenantId: Int!): Boolean!
   removeTenantFromFlat(tenantId: Int!): Boolean!
+  createMessage(input: CreateMessageInput!): Message!
 }
 
 input RegisterInput {
@@ -101,4 +104,15 @@ input FlatRequestInput {
   address: String!
   price: Int!
   landlordId: Int!
+}
+
+input CreateMessageInput {
+  flatId: Int!
+  senderId: Int!
+  content: String!
+  imageUrls: [String!]
+}
+
+type Subscription {
+  messageAdded(flatId: Int!): Message!
 }

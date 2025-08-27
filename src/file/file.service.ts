@@ -21,19 +21,31 @@ export class FileService {
     });
   }
 
-  async uploadFile(file: FileUpload, folder: string): Promise<string> {
+  async uploadFile(file: FileUpload): Promise<string> {
     const { createReadStream, filename, mimetype } = file;
-    const objectName = `${folder}/${Date.now()}-${filename}`;
 
+    const objectName = `${Date.now()}-${filename}`; // nincs folder
+
+    // Hívjuk meg a createReadStream() függvényt
+    const stream = createReadStream();
+
+    // Ellenőrizzük, hogy a bucket létezik
+    const exists = await this.minioClient.bucketExists(this.bucket);
+    if (!exists) {
+      console.log(`Bucket ${this.bucket} does not exist`);
+      await this.minioClient.makeBucket(this.bucket, "us-east-1");
+    }
+
+    // Feltöltés
     await this.minioClient.putObject(
       this.bucket,
       objectName,
-      createReadStream(),
+      stream,
       undefined,
       { "Content-Type": mimetype }
     );
 
-    // Publikus bucket esetén az URL egyszerűen összeállítható
+    console.log(`File uploaded to MinIO: ${objectName}`);
     return `${this.publicUrl}/${objectName}`;
   }
 }

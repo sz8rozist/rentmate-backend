@@ -120,18 +120,21 @@ export class FlatService {
       },
     });
   }
-  async uploadFlatImage(flatId: number, image: FileUpload) {
-    // Kép feltöltése MinIO-ba
-    const imageUrl = await this.fileService.uploadFile(image, "flats");
-    // Kép mentése az adatbázisba
-    await this.prisma.flatImage.create({
-      data: {
-        url: imageUrl,
-        flatId: flatId,
-      },
-    });
-    return true;
-  }
+async uploadFlatImage(flatId: number, image: FileUpload) {
+  // Kép feltöltése MinIO-ba
+  const imageUrl = await this.fileService.uploadFile(image);
+
+  // Mentés adatbázisba
+  await this.prisma.flatImage.create({
+    data: {
+      url: imageUrl,
+      filename: image.filename,
+      flatId: flatId,
+    },
+  });
+
+  return true;
+}
 
   async deleteFlatImage(imageId: number) {
     // Kép törlése az adatbázisból
