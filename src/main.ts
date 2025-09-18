@@ -22,6 +22,12 @@ async function bootstrap() {
     })
   );
   app.useGlobalFilters(new AllExceptionsFilter());
+  app.enableCors({
+    origin: ['*'],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
