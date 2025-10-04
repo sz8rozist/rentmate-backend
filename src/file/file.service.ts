@@ -1,5 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { debug } from "console";
 import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
 import * as Minio from "minio";
 
@@ -8,7 +9,7 @@ export class FileService {
   private minioClient: Minio.Client;
   private bucket: string;
   private publicUrl: string;
-
+  private readonly logger = new Logger(FileService.name);
   constructor(private configService: ConfigService) {
     this.bucket = this.configService.get<string>("MINIO_BUCKET") ?? "";
     this.publicUrl = this.configService.get<string>("MINIO_PUBLIC_URL") ?? "";
@@ -23,7 +24,7 @@ export class FileService {
 
   async uploadFile(file: FileUpload): Promise<string> {
     const { createReadStream, filename, mimetype } = file;
-
+    this.logger.debug(`Uploading file: ${filename}, type: ${mimetype}`);
     const objectName = `${Date.now()}-${filename}`; // nincs folder
 
     // Hívjuk meg a createReadStream() függvényt

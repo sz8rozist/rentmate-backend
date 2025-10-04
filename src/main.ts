@@ -2,6 +2,7 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filter/global.exception.filter";
 import { BadRequestException, ValidationPipe } from "@nestjs/common";
+import  graphqlUploadExpress  from 'graphql-upload/graphqlUploadExpress.mjs';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,6 +22,12 @@ async function bootstrap() {
       },
     })
   );
+
+  app.use("/graphql", (req, res, next) => {
+    next(); // GraphQL endpoint teljesen CSRF mentes
+  });
+  app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 5 }));
+
   app.useGlobalFilters(new AllExceptionsFilter());
   await app.listen(process.env.PORT ?? 3000);
 }

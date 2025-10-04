@@ -2,30 +2,30 @@ import { Args, Int, Mutation, Resolver, Query } from "@nestjs/graphql";
 import { FlatService } from "./flat.service";
 import { FlatRequestInput } from "./dto/flat-request.input";
 import { UsePipes, ValidationPipe } from "@nestjs/common";
-import GraphQLUpload, * as GraphQLUpload_1 from "graphql-upload/GraphQLUpload.mjs";
 import { Flat } from "./flat";
-import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
+import type { FileUpload } from "graphql-upload/processRequest.mjs";
+import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
 @Resolver()
 export class FlatResolver {
-  constructor(private flatService: FlatService) {}
+    constructor(private flatService: FlatService) {
+    }
 
-  @Mutation(() => Flat)
-  @UsePipes(new ValidationPipe())
-  async addFlat(
-    @Args("data") data: FlatRequestInput
-  ) {
-    return this.flatService.addFlat(data);
-  }
+    @Mutation(() => Flat)
+    @UsePipes(new ValidationPipe())
+    async addFlat(
+        @Args("data") data: FlatRequestInput
+    ) {
+        return this.flatService.addFlat(data);
+    }
 
- @Mutation(() => Boolean)
-  async uploadFlatImages(
-    @Args('flatId', { type: () => Int }) flatId: number,
-    @Args({ name: 'images', type: () => [GraphQLUpload] }) images: FileUpload[],
-  ): Promise<boolean> {
-    // Párhuzamos feltöltés
-    await Promise.all(images.map(image => this.flatService.uploadFlatImage(flatId, image)));
-    return true;
-  }
+    @Mutation(() => Boolean)
+    async uploadFlatImage(
+        @Args('flatId', {type: () => Int}) flatId: number,
+        @Args('image', {type: () => GraphQLUpload}) image: FileUpload,
+    ): Promise<boolean> {
+        await this.flatService.uploadFlatImage(flatId, image);
+        return true;
+    }
 
   @Mutation(() => Boolean)
   async deleteFlatImage(

@@ -81,7 +81,7 @@ type Mutation {
   register(data: RegisterInput!): PublicUser!
   uploadFile(file: Upload!): String!
   addFlat(data: FlatRequestInput!): Flat!
-  uploadFlatImages(flatId: Int!, images: [Upload!]!): Boolean!
+  uploadFlatImage(flatId: Int!, image: Upload!): Boolean!
   deleteFlatImage(imageId: Int!): Boolean!
   updateFlat(flatId: Int!, data: FlatRequestInput!): Flat!
   deleteFlat(flatId: Int!): Boolean!

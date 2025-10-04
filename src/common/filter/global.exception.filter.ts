@@ -2,16 +2,20 @@
 import {
   ExceptionFilter,
   Catch,
-  HttpStatus,
   BadRequestException,
   ArgumentsHost,
+  Logger,
 } from "@nestjs/common";
 import { AppException } from "../exception/app.exception";
 import { GraphQLError } from "graphql";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
+  private readonly logger = new Logger(AllExceptionsFilter.name);
+
   catch(exception: any, host: ArgumentsHost) {
+    // Log minden hibát a konzolra
+    this.logger.error('Exception caught', exception instanceof Error ? exception.stack : JSON.stringify(exception));
 
     if (exception instanceof BadRequestException) {
       const response = exception.getResponse(); // ez már a formattedErrors tömb
@@ -35,8 +39,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     // Más hibák
     throw new GraphQLError(
       exception.message || "Internal server error",
-      { extensions: { code: "INTERNAL_ERROR" } , nodes: undefined,
-        source: undefined,}
+      {
+        extensions: { code: "INTERNAL_ERROR" },
+        nodes: undefined,
+        source: undefined,
+      }
     );
   }
 }

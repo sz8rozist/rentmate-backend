@@ -1,146 +1,149 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
-import { PrismaService } from "prisma/prisma.service";
-import { FileService } from "../file/file.service";
-import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
-import { AppException } from "src/common/exception/app.exception";
-import { FlatStatus } from "./flat-status";
-import { FlatRequestInput } from "./dto/flat-request.input";
+import {HttpStatus, Injectable, Logger} from "@nestjs/common";
+import {PrismaService} from "prisma/prisma.service";
+import {FileService} from "../file/file.service";
+import {FileUpload} from "graphql-upload/GraphQLUpload.mjs";
+import {AppException} from "src/common/exception/app.exception";
+import {FlatStatus} from "./flat-status";
+import {FlatRequestInput} from "./dto/flat-request.input";
+import { debug } from "console";
 
 @Injectable()
 export class FlatService {
-  constructor(
-    private prisma: PrismaService,
-    private fileService: FileService
-  ) {}
-
-  async addFlat(data: FlatRequestInput) {
-    // Lakás létrehozása az adatbázisban
-    const flat = await this.prisma.flat.create({
-      data: {
-        status: FlatStatus.available,
-        address: data.address,
-        price: data.price,
-        landlordId: data.landlordId,
-      },
-      include: { images: true },
-    });
-    return flat;
-  }
-
-  async getFlatById(flatId: number) {
-    const flat = await this.prisma.flat.findUnique({
-      where: { id: flatId },
-      include: {
-        images: true,
-        tenants: true,
-        landlord: true,
-        messages: true,
-      },
-    });
-
-    if (!flat) {
-      throw new AppException(`Flat with id ${flatId} not found`, HttpStatus.NOT_FOUND);
+  private readonly logger = new Logger(FlatService.name);
+    constructor(
+        private prisma: PrismaService,
+        private fileService: FileService,
+    ) {
     }
 
-    return flat;
-  }
+    async addFlat(data: FlatRequestInput) {
+        // Lakás létrehozása az adatbázisban
+        return this.prisma.flat.create({
+            data: {
+                status: FlatStatus.available,
+                address: data.address,
+                price: data.price,
+                landlordId: data.landlordId,
+            },
+            include: {images: true},
+        });
+    }
 
-  async deleteFlat(flatId: number) {
-    // Törlés előtt minden kapcsolódó rekordot törlünk
-    await this.prisma.flatImage.deleteMany({ where: { flatId } });
-    await this.prisma.message.deleteMany({ where: { flatId } });
-    // Ha van tenant kapcsolat, azt is törölheted, pl. flatId nullázása
-    await this.prisma.user.updateMany({
-      where: { flatId },
-      data: { flatId: null },
-    });
+    async getFlatById(flatId: number) {
+        const flat = await this.prisma.flat.findUnique({
+            where: {id: flatId},
+            include: {
+                images: true,
+                tenants: true,
+                landlord: true,
+                messages: true,
+            },
+        });
 
-    // Végül magát a lakást töröljük
-    await this.prisma.flat.delete({ where: { id: flatId } });
+        if (!flat) {
+            throw new AppException(`Flat with id ${flatId} not found`, HttpStatus.NOT_FOUND);
+        }
 
-    return { success: true };
-  }
+        return flat;
+    }
 
-  async updateFlat(
-    flatId: number,
-    data: { address?: string; price?: number; status?: FlatStatus }
-  ) {
-    return this.prisma.flat.update({
-      where: { id: flatId },
-      data,
-      include: {
-        images: true,
-        tenants: true,
-        landlord: true,
-        messages: true,
-      },
-    });
-  }
+    async deleteFlat(flatId: number) {
+        // Törlés előtt minden kapcsolódó rekordot törlünk
+        await this.prisma.flatImage.deleteMany({where: {flatId}});
+        await this.prisma.message.deleteMany({where: {flatId}});
+        // Ha van tenant kapcsolat, azt is törölheted, pl. flatId nullázása
+        await this.prisma.user.updateMany({
+            where: {flatId},
+            data: {flatId: null},
+        });
 
-  async addTenantToFlat(flatId: number, tenantId: number) {
-    // Tenant flatId mezőjét beállítjuk
-    return this.prisma.user.update({
-      where: { id: tenantId },
-      data: { flatId },
-    });
-  }
+        // Végül magát a lakást töröljük
+        await this.prisma.flat.delete({where: {id: flatId}});
 
-  async removeTenantFromFlat(tenantId: number) {
-    // Tenant flatId mezőjét nullázzuk
-    return this.prisma.user.update({
-      where: { id: tenantId },
-      data: { flatId: null },
-    });
-  }
+        return {success: true};
+    }
 
-  async getFlatForTenant(tenantId: number) {
-    // Tenant flatId alapján lekérjük a lakást minden adattal
-    const tenant = await this.prisma.user.findUnique({
-      where: { id: tenantId },
-      include: {
-        flat: {
-          include: {
-            images: true,
-            landlord: true,
-            tenants: true,
-            messages: true,
-          },
-        },
-      },
-    });
-    return tenant?.flat;
-  }
+    async updateFlat(
+        flatId: number,
+        data: { address?: string; price?: number; status?: FlatStatus }
+    ) {
+        return this.prisma.flat.update({
+            where: {id: flatId},
+            data,
+            include: {
+                images: true,
+                tenants: true,
+                landlord: true,
+                messages: true,
+            },
+        });
+    }
 
-  async getFlatsForLandlord(landlordId: number) {
-    // Landlord összes lakását lekérjük minden adattal
-    return this.prisma.flat.findMany({
-      where: { landlordId },
-      include: {
-        landlord: true,
-      },
-    });
-  }
-async uploadFlatImage(flatId: number, image: FileUpload) {
-  // Kép feltöltése MinIO-ba
-  const imageUrl = await this.fileService.uploadFile(image);
+    async addTenantToFlat(flatId: number, tenantId: number) {
+        // Tenant flatId mezőjét beállítjuk
+        return this.prisma.user.update({
+            where: {id: tenantId},
+            data: {flatId},
+        });
+    }
 
-  // Mentés adatbázisba
-  await this.prisma.flatImage.create({
-    data: {
-      url: imageUrl,
-      filename: image.filename,
-      flatId: flatId,
-    },
-  });
+    async removeTenantFromFlat(tenantId: number) {
+        // Tenant flatId mezőjét nullázzuk
+        return this.prisma.user.update({
+            where: {id: tenantId},
+            data: {flatId: null},
+        });
+    }
 
-  return true;
-}
+    async getFlatForTenant(tenantId: number) {
+        // Tenant flatId alapján lekérjük a lakást minden adattal
+        const tenant = await this.prisma.user.findUnique({
+            where: {id: tenantId},
+            include: {
+                flat: {
+                    include: {
+                        images: true,
+                        landlord: true,
+                        tenants: true,
+                        messages: true,
+                    },
+                },
+            },
+        });
+        return tenant?.flat;
+    }
 
-  async deleteFlatImage(imageId: number) {
-    // Kép törlése az adatbázisból
-    await this.prisma.flatImage.delete({
-      where: { id: imageId },
-    });
-    return true;
-  }
+    async getFlatsForLandlord(landlordId: number) {
+        // Landlord összes lakását lekérjük minden adattal
+        return this.prisma.flat.findMany({
+            where: {landlordId},
+            include: {
+                landlord: true,
+            },
+        });
+    }
+
+    async uploadFlatImage(flatId: number, image: FileUpload) {
+        // Kép feltöltése MinIO-ba
+        const imageUrl = await this.fileService.uploadFile(image);
+        
+        // Mentés adatbázisba
+        await this.prisma.flatImage.create({
+            data: {
+                url: imageUrl,
+                filename: image.filename,
+                flatId: flatId,
+            },
+        });
+
+        return true;
+    }
+
+    async deleteFlatImage(imageId: number) {
+        // Kép törlése az adatbázisból
+        await this.prisma.flatImage.delete({
+            where: {id: imageId},
+        });
+        return true;
+    }
 }
