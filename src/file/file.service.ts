@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { debug } from "console";
 import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
 import * as Minio from "minio";
 
@@ -21,19 +20,19 @@ export class FileService {
       secretKey: this.configService.get<string>("MINIO_SECRET_KEY") ?? "",
     });
   }
-
-  async uploadFile(file: FileUpload): Promise<string> {
+  // --------------------
+  // Fájl feltöltés MinIO-ba
+  // --------------------
+  async uploadFile(file: FileUpload): Promise<{ key: string; url: string }> {
     const { createReadStream, filename, mimetype } = file;
     this.logger.debug(`Uploading file: ${filename}, type: ${mimetype}`);
-    const objectName = `${Date.now()}-${filename}`; // nincs folder
-
-    // Hívjuk meg a createReadStream() függvényt
+    const objectName = `${Date.now()}-${filename}`;
     const stream = createReadStream();
 
-    // Ellenőrizzük, hogy a bucket létezik
+    // Bucket ellenőrzése
     const exists = await this.minioClient.bucketExists(this.bucket);
     if (!exists) {
-      console.log(`Bucket ${this.bucket} does not exist`);
+      this.logger.log(`Bucket ${this.bucket} does not exist, creating...`);
       await this.minioClient.makeBucket(this.bucket, "us-east-1");
     }
 
@@ -43,10 +42,46 @@ export class FileService {
       objectName,
       stream,
       undefined,
-      { "Content-Type": mimetype }
+      {
+        "Content-Type": mimetype,
+      }
     );
 
-    console.log(`File uploaded to MinIO: ${objectName}`);
-    return `${this.publicUrl}/${objectName}`;
+    const url = `${this.publicUrl}/${objectName}`;
+    this.logger.log(`File uploaded to MinIO: ${objectName}`);
+    return { key: objectName, url };
+  }
+
+  // --------------------
+  // Fájl törlése MinIO-ból
+  // --------------------
+  async deleteFile(key: string): Promise<void> {
+    try {
+      await this.minioClient.removeObject(this.bucket, key);
+      this.logger.log(`File deleted from MinIO: ${key}`);
+    } catch (err) {
+      this.logger.error(`Failed to delete file ${key}: ${err.message}`);
+      throw err;
+    }
+  }
+
+  // --------------------
+  // Fájl létezésének ellenőrzése
+  // --------------------
+  async fileExists(key: string): Promise<boolean> {
+    try {
+      await this.minioClient.statObject(this.bucket, key);
+      return true;
+    } catch (err) {
+      if (err.code === "NotFound") return false;
+      throw err;
+    }
+  }
+
+  // --------------------
+  // Publikus URL lekérése
+  // --------------------
+  getPublicUrl(key: string): string {
+    return `${this.publicUrl}/${key}`;
   }
 }

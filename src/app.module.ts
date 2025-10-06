@@ -10,6 +10,7 @@ import { FlatModule } from "./flat/flat.module";
 import { ChatModule } from "./chat/chat.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { PubSubModule } from "./pubsub/pubsub.module";
+import { DocumentsModule } from './documents/documents.module';
 @Module({
   imports: [
     GraphQLModule.forRoot({
@@ -25,6 +26,7 @@ import { PubSubModule } from "./pubsub/pubsub.module";
     ChatModule,
     PrismaModule,
     PubSubModule,
+    DocumentsModule,
   ],
 
   controllers: [AppController],

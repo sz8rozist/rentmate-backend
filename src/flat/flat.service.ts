@@ -125,12 +125,13 @@ export class FlatService {
 
     async uploadFlatImage(flatId: number, image: FileUpload) {
         // Kép feltöltése MinIO-ba
-        const imageUrl = await this.fileService.uploadFile(image);
+        const { key, url } = await this.fileService.uploadFile(image);
+
         
         // Mentés adatbázisba
         await this.prisma.flatImage.create({
             data: {
-                url: imageUrl,
+                url: url,
                 filename: image.filename,
                 flatId: flatId,
             },

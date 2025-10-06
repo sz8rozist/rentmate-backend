@@ -38,7 +38,7 @@ export class ChatResolver {
 
     if (files) {
       for (const file of files) {
-        const url = await this.uploadService.uploadFile(file);
+        const {key, url} = await this.uploadService.uploadFile(file);
         imageUrls.push(url);
       }
     }

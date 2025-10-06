@@ -31,7 +31,7 @@ model Flat {
   images     FlatImage[] @relation("FlatImages")
   messages   Message[]   @relation("MessageFlat")
   tenants    User[]      @relation("TenantFlat")
-
+  documents  Document[]  @relation("FlatDocument")
   @@index([landlordId], map: "Flat_landlordId_fkey")
 }
 
@@ -67,4 +67,16 @@ enum UserRole {
 enum FlatStatus {
   available
   rented
+}
+
+model Document {
+  id         String   @id @default(uuid())
+  name       String
+  url        String
+  type       String
+  category   String
+  filePath   String
+  flatId     Int
+  flat       Flat?     @relation("FlatDocument", fields: [flatId], references: [id])
+  uploadedAt DateTime @default(now())
 }
