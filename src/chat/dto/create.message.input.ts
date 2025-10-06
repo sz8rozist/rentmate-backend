@@ -12,5 +12,5 @@ export class CreateMessageInput {
   content: string;
 
   @Field(() => [String], { nullable: true })
-  imageUrls?: string;
+  imageUrls?: string[];
 }

@@ -16,14 +16,14 @@ export class ChatService {
   }
 
   async createMessage(input: CreateMessageInput): Promise<Message> {
-    return this.prisma.message.create({
-      data: {
-        flatId: input.flatId,
-        senderId: input.senderId,
-        content: input.content,
-        imageUrls: input.imageUrls ? JSON.stringify(input.imageUrls) : null,
-      },
-      include: { sender: true, flat: true },
-    });
-  }
+  return this.prisma.message.create({
+    data: {
+      flatId: input.flatId,
+      senderId: input.senderId,
+      content: input.content,
+      imageUrls: input.imageUrls ? JSON.stringify(input.imageUrls) : null,
+    },
+    include: { sender: true, flat: true },
+  });
+}
 }
