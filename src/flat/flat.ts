@@ -25,8 +25,8 @@ export class Flat {
   @Field(() => User)
   landlord: User;
 
-  @Field(() => [FlatImage])
-  images: FlatImage[];
+  @Field(() => [FlatImage], { nullable: true })
+  images?: FlatImage[];
 
   @Field(() => [Message])
   messages: Message[];

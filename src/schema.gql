@@ -72,7 +72,7 @@ type Flat {
   status: FlatStatus!
   landlordId: Int!
   landlord: User!
-  images: [FlatImage!]!
+  images: [FlatImage!]
   messages: [Message!]!
   tenants: [User!]!
 }

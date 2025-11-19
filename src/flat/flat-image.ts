@@ -3,7 +3,7 @@ import { Flat } from "./flat";
 
 @ObjectType()
 export class FlatImage {
-  @Field(type => ID)
+  @Field(() => ID)
   id: number;
 
   @Field()
@@ -12,7 +12,7 @@ export class FlatImage {
   @Field()
   filename: string;
 
-  @Field(type => Int)
+  @Field(() => Int)
   flatId: number;
 
   // Kapcsolat (relation)

@@ -5,15 +5,15 @@ import {FileUpload} from "graphql-upload/GraphQLUpload.mjs";
 import {AppException} from "src/common/exception/app.exception";
 import {FlatStatus} from "./flat-status";
 import {FlatRequestInput} from "./dto/flat-request.input";
-import { debug } from "console";
+import { BaseService } from "src/common/base.service";
 
 @Injectable()
-export class FlatService {
-  private readonly logger = new Logger(FlatService.name);
+export class FlatService extends BaseService {
     constructor(
         private prisma: PrismaService,
         private fileService: FileService,
     ) {
+        super(FlatService.name);
     }
 
     async addFlat(data: FlatRequestInput) {
@@ -119,6 +119,9 @@ export class FlatService {
             where: {landlordId},
             include: {
                 landlord: true,
+                images: true,
+                tenants: true,
+                messages: true,
             },
         });
     }
