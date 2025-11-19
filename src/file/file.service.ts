@@ -1,16 +1,18 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
 import * as Minio from "minio";
 import { FileUploadResponse } from "./dto/file-upload-dto";
+import { AppException } from "src/common/exception/app.exception";
+import { BaseService } from "src/common/base.service";
 
 @Injectable()
-export class FileService {
+export class FileService extends BaseService {
   private minioClient: Minio.Client;
   private bucket: string;
   private publicUrl: string;
-  private readonly logger = new Logger(FileService.name);
   constructor(private configService: ConfigService) {
+    super(FileService.name);
     this.bucket = this.configService.get<string>("MINIO_BUCKET") ?? "";
     this.publicUrl = this.configService.get<string>("MINIO_PUBLIC_URL") ?? "";
     this.minioClient = new Minio.Client({
@@ -27,19 +29,36 @@ export class FileService {
     const objectName = `${Date.now()}-${filename}`;
     const stream = createReadStream();
 
-    const exists = await this.minioClient.bucketExists(this.bucket);
-    if (!exists) {
-      this.logger.log(`Bucket ${this.bucket} does not exist, creating...`);
-      await this.minioClient.makeBucket(this.bucket, 'us-east-1');
+    try {
+      const exists = await this.minioClient.bucketExists(this.bucket);
+      if (!exists) {
+        this.logger.log(`Bucket ${this.bucket} nem létezik, létrehozás...`);
+        await this.minioClient.makeBucket(this.bucket, "us-east-1");
+      }
+
+      await this.minioClient.putObject(
+        this.bucket,
+        objectName,
+        stream,
+        undefined,
+        {
+          "Content-Type": mimetype,
+        }
+      );
+
+      const url = `${this.publicUrl}/${objectName}`;
+      this.logger.log(`Fájl feltöltve a MinIO-ba: ${objectName}`);
+      return { key: objectName, url };
+    } catch (err) {
+      this.logger.error(
+        `A fájl feltöltés sikertelen: ${filename}: ${err.message}`,
+        err.stack
+      );
+      throw new AppException(
+        `A fájl feltöltés sikertelen.`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
-
-    await this.minioClient.putObject(this.bucket, objectName, stream, undefined, {
-      'Content-Type': mimetype,
-    });
-
-    const url = `${this.publicUrl}/${objectName}`;
-    this.logger.log(`File uploaded to MinIO: ${objectName}`);
-    return { key: objectName, url };
   }
 
   // --------------------
@@ -48,9 +67,9 @@ export class FileService {
   async deleteFile(key: string): Promise<void> {
     try {
       await this.minioClient.removeObject(this.bucket, key);
-      this.logger.log(`File deleted from MinIO: ${key}`);
+      this.logger.log(`Fájl törölve a MinIO-ból: ${key}`);
     } catch (err) {
-      this.logger.error(`Failed to delete file ${key}: ${err.message}`);
+      this.logger.error(`Fájl törlése sikertelen: ${key}: ${err.message}`);
       throw err;
     }
   }
