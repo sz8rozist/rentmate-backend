@@ -9,5 +9,5 @@ export class CreateDocumentInput {
   category: string;
 
   @Field()
-  flatId: string;
+  flatId: number;
 }

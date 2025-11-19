@@ -51,7 +51,7 @@ model Message {
   senderId  Int
   content   String
   createdAt DateTime @default(now())
-  imageUrls String?
+  imageUrls Json?
   flat      Flat     @relation("MessageFlat", fields: [flatId], references: [id])
   sender    User     @relation("SenderUser", fields: [senderId], references: [id])
 
@@ -70,7 +70,7 @@ enum FlatStatus {
 }
 
 model Document {
-  id         String   @id @default(uuid())
+  id         Int   @id @default(autoincrement())
   name       String
   url        String
   type       String

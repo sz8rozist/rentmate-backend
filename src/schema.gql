@@ -15,13 +15,22 @@ enum UserRole {
   tenant
 }
 
+type FileUploadResponse {
+  key: String!
+  url: String!
+}
+
+type UploadFilesResponse {
+  files: [FileUploadResponse!]!
+}
+
 type Message {
   id: ID!
   flatId: Float!
   senderId: Float!
   content: String!
   createdAt: DateTime!
-  imageUrls: [String!]
+  imageUrls: JSON
   flat: Flat!
   sender: User!
 }
@@ -30,6 +39,11 @@ type Message {
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
 
 type User {
   id: ID!
@@ -68,18 +82,36 @@ enum FlatStatus {
   rented
 }
 
+type DocumentModel {
+  id: ID!
+  name: String!
+  url: String!
+  type: String!
+  category: String!
+  filePath: String!
+  flatId: Float!
+  uploadedAt: DateTime!
+}
+
 type Query {
+  tenants(input: TenantRequest): [PublicUser!]!
+
   """Get a flat by its ID"""
   flatById(id: Int!): Flat
   getFlatForTenant(tenantId: Int!): Flat
   getFlatsForLandlord(landlordId: Int!): [Flat!]!
   messages(flatId: Int!): [Message!]!
+  documents(flatId: Float!): [DocumentModel!]!
+}
+
+input TenantRequest {
+  name: String
 }
 
 type Mutation {
   login(email: String!, password: String!): String!
   register(data: RegisterInput!): PublicUser!
-  uploadFile(file: Upload!): String!
+  uploadFiles(input: UploadFilesInput!): UploadFilesResponse!
   addFlat(data: FlatRequestInput!): Flat!
   uploadFlatImage(flatId: Int!, image: Upload!): Boolean!
   deleteFlatImage(imageId: Int!): Boolean!
@@ -87,7 +119,9 @@ type Mutation {
   deleteFlat(flatId: Int!): Boolean!
   addTenantToFlat(flatId: Int!, tenantId: Int!): Boolean!
   removeTenantFromFlat(tenantId: Int!): Boolean!
-  createMessage(input: CreateMessageInput!): Message!
+  createMessageWithFiles(input: CreateMessageInput!, files: [Upload!]): Message!
+  uploadDocument(file: Upload!, data: CreateDocumentInput!): DocumentModel!
+  deleteDocument(id: Float!): Boolean!
 }
 
 input RegisterInput {
@@ -95,6 +129,11 @@ input RegisterInput {
   name: String!
   password: String!
   role: UserRole!
+}
+
+input UploadFilesInput {
+  """Fájlok feltöltése"""
+  files: [Upload!]!
 }
 
 """The `Upload` scalar type represents a file upload."""
@@ -110,7 +149,13 @@ input CreateMessageInput {
   flatId: Int!
   senderId: Int!
   content: String!
-  imageUrls: [String!]
+  imageUrls: JSON
+}
+
+input CreateDocumentInput {
+  originalName: String!
+  category: String!
+  flatId: Float!
 }
 
 type Subscription {

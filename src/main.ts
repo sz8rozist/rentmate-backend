@@ -23,9 +23,11 @@ async function bootstrap() {
     })
   );
 
-  app.use("/graphql", (req, res, next) => {
-    next(); // GraphQL endpoint teljesen CSRF mentes
-  });
+  //app.enableCors({ origin: '*' })
+  app.enableCors({
+  origin: ['http://localhost:3000'],
+  credentials: false,
+});
   app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 5 }));
 
   app.useGlobalFilters(new AllExceptionsFilter());

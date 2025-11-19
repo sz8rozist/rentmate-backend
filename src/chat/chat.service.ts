@@ -1,27 +1,33 @@
 import { Injectable } from "@nestjs/common";
-import { Message } from "@prisma/client";
 import { PrismaService } from "prisma/prisma.service";
 import { CreateMessageInput } from "./dto/create.message.input";
+import { Message } from "./message";
+
+type MessageSummary = Omit<Message, "sender" | "flat"> & {
+  sender: { id: number; name: string; email: string;};
+  flat: { id: number; address: string; price: number; landlordId: number;};
+};
 
 @Injectable()
 export class ChatService {
   constructor(private prisma: PrismaService) {}
 
-  async findMessages(flatId: number): Promise<Message[]> {
+  async findMessages(flatId: number): Promise<MessageSummary[]> {
     return this.prisma.message.findMany({
       where: { flatId },
-      include: { sender: true, flat: true },
+      include: { sender: true, flat: true},
       orderBy: { createdAt: "asc" },
     });
+
   }
 
-  async createMessage(input: CreateMessageInput): Promise<Message> {
+  async createMessage(input: CreateMessageInput): Promise<MessageSummary> {
   return this.prisma.message.create({
     data: {
       flatId: input.flatId,
       senderId: input.senderId,
       content: input.content,
-      imageUrls: input.imageUrls ? JSON.stringify(input.imageUrls) : null,
+      imageUrls: input.imageUrls ?? null,
     },
     include: { sender: true, flat: true },
   });

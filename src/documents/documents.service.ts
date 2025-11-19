@@ -13,7 +13,7 @@ export class DocumentsService {
   // --------------------
   // Dokumentum feltöltése + metaadat mentés
   // --------------------
-  async uploadDocument(file: any, category: string, flatId: string): Promise<DocumentModel> {
+  async uploadDocument(file: any, category: string, flatId: number): Promise<DocumentModel> {
     // 1️⃣ Fájl feltöltése MinIO-ba
     const { key, url } = await this.fileService.uploadFile(file);
 
@@ -39,7 +39,7 @@ export class DocumentsService {
   // --------------------
   // Dokumentumok lekérése flatId alapján
   // --------------------
-  async getDocuments(flatId: string): Promise<DocumentModel[]> {
+  async getDocuments(flatId: number): Promise<DocumentModel[]> {
     return this.prisma.document.findMany({
       where: { flatId },
       orderBy: { uploadedAt: "desc" },
@@ -49,7 +49,7 @@ export class DocumentsService {
   // --------------------
   // Dokumentum törlése
   // --------------------
-  async deleteDocument(id: string): Promise<boolean> {
+  async deleteDocument(id: number): Promise<boolean> {
     // 1️⃣ Lekérjük a dokumentumot
     const doc = await this.prisma.document.findUnique({ where: { id } });
     if (!doc) return false;
@@ -63,7 +63,5 @@ export class DocumentsService {
     return true;
   }
 }
-function uuid() {
-    throw new Error('Function not implemented.');
-}
+
 

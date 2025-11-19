@@ -22,12 +22,12 @@ export class DocumentsResolver {
   }
 
   @Query(() => [DocumentModel])
-  async documents(@Args("flatId") flatId: string) {
+  async documents(@Args("flatId") flatId: number) {
     return this.documentsService.getDocuments(flatId);
   }
 
   @Mutation(() => Boolean)
-  async deleteDocument(@Args("id") id: string) {
+  async deleteDocument(@Args("id") id: number) {
     return this.documentsService.deleteDocument(id);
   }
 }

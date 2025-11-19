@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
 import * as Minio from "minio";
+import { FileUploadResponse } from "./dto/file-upload-dto";
 
 @Injectable()
 export class FileService {
@@ -20,32 +21,21 @@ export class FileService {
       secretKey: this.configService.get<string>("MINIO_SECRET_KEY") ?? "",
     });
   }
-  // --------------------
-  // Fájl feltöltés MinIO-ba
-  // --------------------
-  async uploadFile(file: FileUpload): Promise<{ key: string; url: string }> {
+  async uploadFile(file: FileUpload): Promise<FileUploadResponse> {
     const { createReadStream, filename, mimetype } = file;
     this.logger.debug(`Uploading file: ${filename}, type: ${mimetype}`);
     const objectName = `${Date.now()}-${filename}`;
     const stream = createReadStream();
 
-    // Bucket ellenőrzése
     const exists = await this.minioClient.bucketExists(this.bucket);
     if (!exists) {
       this.logger.log(`Bucket ${this.bucket} does not exist, creating...`);
-      await this.minioClient.makeBucket(this.bucket, "us-east-1");
+      await this.minioClient.makeBucket(this.bucket, 'us-east-1');
     }
 
-    // Feltöltés
-    await this.minioClient.putObject(
-      this.bucket,
-      objectName,
-      stream,
-      undefined,
-      {
-        "Content-Type": mimetype,
-      }
-    );
+    await this.minioClient.putObject(this.bucket, objectName, stream, undefined, {
+      'Content-Type': mimetype,
+    });
 
     const url = `${this.publicUrl}/${objectName}`;
     this.logger.log(`File uploaded to MinIO: ${objectName}`);

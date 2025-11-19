@@ -1,4 +1,5 @@
 import { InputType, Field, Int } from '@nestjs/graphql';
+import GraphQLJSON from 'graphql-type-json';
 
 @InputType()
 export class CreateMessageInput {
@@ -11,6 +12,6 @@ export class CreateMessageInput {
   @Field()
   content: string;
 
-  @Field(() => [String], { nullable: true })
-  imageUrls?: string[];
+  @Field(() => GraphQLJSON, { nullable: true })
+  imageUrls?: any;
 }

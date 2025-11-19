@@ -21,7 +21,7 @@ export class DocumentModel {
   filePath: string;
 
   @Field()
-  flatId: string;
+  flatId: number;
 
   @Field()
   uploadedAt: Date;
