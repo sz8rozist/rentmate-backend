@@ -1,17 +1,20 @@
 import { InputType, Field, Int } from '@nestjs/graphql';
-import GraphQLJSON from 'graphql-type-json';
+import { IsInt, IsNotEmpty, IsString } from 'class-validator';
 
 @InputType()
 export class CreateMessageInput {
   @Field(() => Int)
+  @IsNotEmpty()
+  @IsInt()
   flatId: number;
 
   @Field(() => Int)
+  @IsNotEmpty()
+  @IsInt()
   senderId: number;
 
   @Field()
+  @IsNotEmpty()
+  @IsString()
   content: string;
-
-  @Field(() => GraphQLJSON, { nullable: true })
-  imageUrls?: any;
 }

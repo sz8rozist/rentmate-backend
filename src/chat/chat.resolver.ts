@@ -1,62 +1,54 @@
 import {
-  Resolver,
-  Query,
-  Mutation,
-  Args,
-  Int,
-  Subscription,
-} from "@nestjs/graphql";
-import { Inject } from "@nestjs/common";
-import { PubSub } from "graphql-subscriptions";
+  WebSocketGateway,
+  WebSocketServer,
+  SubscribeMessage,
+  MessageBody,
+  ConnectedSocket,
+} from "@nestjs/websockets";
+import { Server, Socket } from "socket.io";
 import { ChatService } from "./chat.service";
 import { CreateMessageInput } from "./dto/create.message.input";
-import { Message } from "./message";
-import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
-import { FileUpload } from "graphql-upload/processRequest.mjs";
-import { FileService } from "src/file/file.service";
 
-@Resolver(() => Message)
+@WebSocketGateway({
+  cors: { origin: "*" }, // Flutter app origin
+})
 export class ChatResolver {
-  constructor(
-    private readonly chatService: ChatService,
-    private readonly uploadService: FileService,
-    @Inject("PUB_SUB") private pubSub: PubSub
-  ) {}
+  @WebSocketServer()
+  server: Server;
 
-  @Query(() => [Message])
-  async messages(@Args('flatId', { type: () => Int }) flatId: number) {
-    return this.chatService.findMessages(flatId);
-  }
+  constructor(private readonly chatService: ChatService) {}
 
-  @Mutation(() => Message)
-  async createMessageWithFiles(
-    @Args('input') input: CreateMessageInput,
-    @Args({ name: 'files', type: () => [GraphQLUpload], nullable: true })
-    files?: FileUpload[],
+  // Szobához csatlakozás
+  @SubscribeMessage("joinRoom")
+  async joinRoom(
+    @MessageBody() data: { flatId: number },
+    @ConnectedSocket() client: Socket
   ) {
-    const imageUrls: string[] = [];
-
-    if (files) {
-      for (const file of files) {
-        const {key, url} = await this.uploadService.uploadFile(file);
-        imageUrls.push(url);
-      }
-    }
-
-    const message = await this.chatService.createMessage({
-      ...input,
-      imageUrls,
-    });
-
-    this.pubSub.publish('messageAdded', { messageAdded: message });
-    return message;
+    const roomName = `flat_${data.flatId}`;
+    client.join(roomName);
   }
 
-  @Subscription(() => Message, {
-    filter: (payload, variables) =>
-      payload.messageAdded.flatId === variables.flatId,
-  })
-  messageAdded(@Args('flatId', { type: () => Int }) flatId: number) {
-    return this.pubSub.asyncIterableIterator('messageAdded');
+  // Üzenet küldés
+  @SubscribeMessage("sendMessage")
+  async handleMessage(
+    @MessageBody() input: CreateMessageInput,
+    @ConnectedSocket() client: Socket
+  ) {
+    // Üzenet mentése az adatbázisba
+    const message = await this.chatService.createMessage(input);
+
+    // Broadcast a szobának
+    const roomName = `flat_${input.flatId}`;
+    this.server.to(roomName).emit("messageAdded", message);
+  }
+
+  // Opció: ha szeretnél lekérni üzeneteket
+  @SubscribeMessage("getMessages")
+  async getMessages(
+    @MessageBody() data: { flatId: number },
+    @ConnectedSocket() client: Socket
+  ) {
+    const messages = await this.chatService.findMessages(data.flatId);
+    client.emit("messages", messages);
   }
 }

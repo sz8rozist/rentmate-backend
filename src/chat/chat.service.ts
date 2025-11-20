@@ -26,8 +26,7 @@ export class ChatService {
     data: {
       flatId: input.flatId,
       senderId: input.senderId,
-      content: input.content,
-      imageUrls: input.imageUrls ?? null,
+      content: input.content
     },
     include: { sender: true, flat: true },
   });

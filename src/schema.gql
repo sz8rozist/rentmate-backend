@@ -100,7 +100,6 @@ type Query {
   flatById(id: Int!): Flat
   getFlatForTenant(tenantId: Int!): Flat
   getFlatsForLandlord(landlordId: Int!): [Flat!]!
-  messages(flatId: Int!): [Message!]!
   documents(flatId: Float!): [DocumentModel!]!
 }
 
@@ -119,7 +118,6 @@ type Mutation {
   deleteFlat(flatId: Int!): Boolean!
   addTenantToFlat(flatId: Int!, tenantId: Int!): Boolean!
   removeTenantFromFlat(tenantId: Int!): Boolean!
-  createMessageWithFiles(input: CreateMessageInput!, files: [Upload!]): Message!
   uploadDocument(file: Upload!, data: CreateDocumentInput!): DocumentModel!
   deleteDocument(id: Float!): Boolean!
 }
@@ -145,19 +143,8 @@ input FlatRequestInput {
   landlordId: Int!
 }
 
-input CreateMessageInput {
-  flatId: Int!
-  senderId: Int!
-  content: String!
-  imageUrls: JSON
-}
-
 input CreateDocumentInput {
   originalName: String!
   category: String!
   flatId: Float!
-}
-
-type Subscription {
-  messageAdded(flatId: Int!): Message!
 }
