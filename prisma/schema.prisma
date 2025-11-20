@@ -32,30 +32,41 @@ model Flat {
   messages   Message[]   @relation("MessageFlat")
   tenants    User[]      @relation("TenantFlat")
   documents  Document[]  @relation("FlatDocument")
+
   @@index([landlordId], map: "Flat_landlordId_fkey")
 }
 
 model FlatImage {
-  id     Int    @id @default(autoincrement())
-  url    String
+  id       Int    @id @default(autoincrement())
+  url      String
   filename String
-  flatId Int
-  flat   Flat   @relation("FlatImages", fields: [flatId], references: [id])
+  flatId   Int
+  flat     Flat   @relation("FlatImages", fields: [flatId], references: [id])
 
   @@index([flatId], map: "FlatImage_flatId_fkey")
 }
 
 model Message {
-  id        Int      @id @default(autoincrement())
-  flatId    Int
-  senderId  Int
-  content   String
-  createdAt DateTime @default(now())
-  flat      Flat     @relation("MessageFlat", fields: [flatId], references: [id])
-  sender    User     @relation("SenderUser", fields: [senderId], references: [id])
+  id                 Int                 @id @default(autoincrement())
+  flatId             Int
+  senderId           Int
+  content            String
+  createdAt          DateTime            @default(now())
+  flat               Flat                @relation("MessageFlat", fields: [flatId], references: [id])
+  sender             User                @relation("SenderUser", fields: [senderId], references: [id])
+  messageAttachments MessageAttachment[] @relation("MessageAttachments")
 
   @@index([flatId], map: "Message_flatId_fkey")
   @@index([senderId], map: "Message_senderId_fkey")
+}
+
+model MessageAttachment {
+  id        Int     @id @default(autoincrement())
+  url       String
+  messageId Int
+  message   Message @relation("MessageAttachments", fields: [messageId], references: [id])
+
+  @@index([messageId], map: "MessageAttachment_messageId_fkey")
 }
 
 enum UserRole {
@@ -69,13 +80,13 @@ enum FlatStatus {
 }
 
 model Document {
-  id         Int   @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   name       String
   url        String
   type       String
   category   String
   filePath   String
   flatId     Int
-  flat       Flat?     @relation("FlatDocument", fields: [flatId], references: [id])
+  flat       Flat?    @relation("FlatDocument", fields: [flatId], references: [id])
   uploadedAt DateTime @default(now())
 }

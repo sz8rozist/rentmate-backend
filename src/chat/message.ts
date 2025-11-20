@@ -1,6 +1,7 @@
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { User } from 'src/auth/user';
 import { Flat } from 'src/flat/flat';
+import { MessageAttachment } from './message.attachment';
 @ObjectType()
 export class Message {
   @Field(() => ID)
@@ -24,4 +25,7 @@ export class Message {
 
   @Field(() => User)
   sender: User;
+
+  @Field(() => [MessageAttachment])
+  messageAttachments: MessageAttachment[];
 }

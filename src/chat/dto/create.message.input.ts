@@ -1,5 +1,6 @@
 import { InputType, Field, Int } from '@nestjs/graphql';
-import { IsArray, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import GraphQLUpload, { FileUpload } from 'graphql-upload/GraphQLUpload.mjs';
 
 @InputType()
 export class CreateMessageInput {
@@ -14,7 +15,10 @@ export class CreateMessageInput {
   senderId: number;
 
   @Field()
-  @IsNotEmpty()
   @IsString()
   content: string;
+
+  @Field()
+  @IsBoolean()
+  hasAttachment: boolean;
 }

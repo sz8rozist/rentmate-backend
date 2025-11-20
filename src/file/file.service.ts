@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { HttpStatus, Injectable} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
 import * as Minio from "minio";

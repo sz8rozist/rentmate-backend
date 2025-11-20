@@ -24,6 +24,13 @@ type UploadFilesResponse {
   files: [FileUploadResponse!]!
 }
 
+type MessageAttachment {
+  id: ID!
+  url: Float!
+  messageId: Float!
+  messages: Message!
+}
+
 type Message {
   id: ID!
   flatId: Float!
@@ -32,6 +39,7 @@ type Message {
   createdAt: DateTime!
   flat: Flat!
   sender: User!
+  messageAttachments: [MessageAttachment!]!
 }
 
 """
@@ -112,6 +120,7 @@ type Mutation {
   deleteFlat(flatId: Int!): Boolean!
   addTenantToFlat(flatId: Int!, tenantId: Int!): Boolean!
   removeTenantFromFlat(tenantId: Int!): Boolean!
+  uploadMessageImage(image: Upload!, messageId: Int!): String!
   uploadDocument(file: Upload!, data: CreateDocumentInput!): DocumentModel!
   deleteDocument(id: Float!): Boolean!
 }
