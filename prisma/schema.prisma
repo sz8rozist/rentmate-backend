@@ -51,7 +51,6 @@ model Message {
   senderId  Int
   content   String
   createdAt DateTime @default(now())
-  imageUrls Json?
   flat      Flat     @relation("MessageFlat", fields: [flatId], references: [id])
   sender    User     @relation("SenderUser", fields: [senderId], references: [id])
 

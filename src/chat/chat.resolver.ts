@@ -9,6 +9,9 @@ import { Server, Socket } from "socket.io";
 import { ChatService } from "./chat.service";
 import { CreateMessageInput } from "./dto/create.message.input";
 
+//TODO: Meg kell oldani, hogy az üzenethez küldött képet vagy fájlt minioba tároljuk. Kell egy új db tábla például:  message_attachments (id, messageId, url, createdAt) Ahol tároljuk az üzenethez küldött fájlt.
+
+
 @WebSocketGateway({
   cors: { origin: "*" }, // Flutter app origin
 })

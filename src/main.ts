@@ -2,7 +2,8 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filter/global.exception.filter";
 import { BadRequestException, ValidationPipe } from "@nestjs/common";
-import  graphqlUploadExpress  from 'graphql-upload/graphqlUploadExpress.mjs';
+import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
+import { Server } from "http";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,12 +26,14 @@ async function bootstrap() {
 
   //app.enableCors({ origin: '*' })
   app.enableCors({
-  origin: ['http://localhost:3000'],
-  credentials: false,
-});
+    origin: ["http://localhost:3000"],
+    credentials: false,
+    maxHttpBufferSize: 1e8, // 100 MB, vagy ami kell
+  });
   app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 5 }));
 
   app.useGlobalFilters(new AllExceptionsFilter());
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
