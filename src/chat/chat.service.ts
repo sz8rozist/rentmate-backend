@@ -8,7 +8,10 @@ import { MessageDTO } from "./dto/message.dto";
 
 @Injectable()
 export class ChatService extends BaseService {
-  constructor(private prisma: PrismaService, private fileService: FileService) {
+  constructor(
+    private prisma: PrismaService,
+    private fileService: FileService
+  ) {
     super(ChatService.name);
   }
 
@@ -16,13 +19,14 @@ export class ChatService extends BaseService {
     return await this.prisma.message.findMany({
       where: { flatId },
       include: {
-        sender: true, flat: true, 
+        sender: true,
+        flat: true,
         messageAttachments: {
           select: {
             id: true,
             url: true,
           },
-        }
+        },
       },
     });
   }
@@ -41,31 +45,52 @@ export class ChatService extends BaseService {
     return { ...message, messageAttachments: [] };
   }
 
-  async uploadMessageImage(image: FileUpload, messageId: number): Promise<string> {
+  async uploadMessageImage(
+    image: FileUpload,
+    messageId: number
+  ): Promise<string> {
     this.logger.log(`Kép feltöltés üzenethez: ${messageId}`);
     const { key, url } = await this.fileService.uploadFile(image);
 
     await this.prisma.messageAttachment.create({
       data: {
         messageId: messageId,
-        url: url
+        url: url,
       },
     });
 
     return url;
   }
 
-    async getMessageById(id: number): Promise<MessageDTO> {
-    return await this.prisma.message.findMany({
+  async getMessageById(id: number): Promise<MessageDTO | null> {
+    return await this.prisma.message.findUnique({
       where: { id },
-      include: {
-        sender: true, flat: true, 
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+        flat: {
+          select: {
+            id: true,
+            address: true,
+            price: true,
+            landlordId: true,
+          },
+        },
         messageAttachments: {
           select: {
             id: true,
             url: true,
           },
-        }
+        },
       },
     });
   }
