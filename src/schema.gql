@@ -120,7 +120,6 @@ type Mutation {
   deleteFlat(flatId: Int!): Boolean!
   addTenantToFlat(flatId: Int!, tenantId: Int!): Boolean!
   removeTenantFromFlat(tenantId: Int!): Boolean!
-  uploadMessageImage(image: Upload!, messageId: Int!): String!
   uploadDocument(file: Upload!, data: CreateDocumentInput!): DocumentModel!
   deleteDocument(id: Float!): Boolean!
 }

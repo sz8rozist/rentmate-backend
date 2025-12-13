@@ -62,8 +62,8 @@ export class ChatService extends BaseService {
     return url;
   }
 
-  async getMessageById(id: number): Promise<MessageDTO | null> {
-    return await this.prisma.message.findUnique({
+  async getMessageById(id: number): Promise<MessageDTO> {
+    return await this.prisma.message.findFirstOrThrow({
       where: { id },
       select: {
         id: true,
