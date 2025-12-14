@@ -1,21 +1,22 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
 import { CreateMessageInput } from "./dto/create.message.input";
 import { BaseService } from "src/common/base.service";
-import { FileService } from "src/file/file.service";
 import { FileUpload } from "graphql-upload/processRequest.mjs";
 import { MessageDTO } from "./dto/message.dto";
+import type { FileStorageService } from "src/file/file-storage-interface";
 
 @Injectable()
 export class ChatService extends BaseService {
   constructor(
     private prisma: PrismaService,
-    private fileService: FileService
+    @Inject("FileStorageService") private fileService: FileStorageService
   ) {
     super(ChatService.name);
   }
 
   async findMessages(flatId: number): Promise<MessageDTO[]> {
+    this.logger.log(`Üzenetek lekérése flatId=${flatId}`);
     return await this.prisma.message.findMany({
       where: { flatId },
       include: {
@@ -24,7 +25,7 @@ export class ChatService extends BaseService {
         messageAttachments: {
           select: {
             id: true,
-            url: true,
+            filename: true,
           },
         },
       },
@@ -49,17 +50,19 @@ export class ChatService extends BaseService {
     image: FileUpload,
     messageId: number
   ): Promise<string> {
-    this.logger.log(`Kép feltöltés üzenethez: ${messageId}`);
+    this.logger.log(`Kép feltöltés üzenethez: ${messageId}, ${image.filename}`);
     const { key, url } = await this.fileService.uploadFile(image);
 
-    await this.prisma.messageAttachment.create({
-      data: {
-        messageId: messageId,
-        url: url,
-      },
-    });
+  this.logger.log(`Fájl feltöltve key=${key}`);
 
-    return url;
+  await this.prisma.messageAttachment.create({
+    data: {
+      messageId: messageId,
+      filename: key,
+    },
+  });
+
+    return key;
   }
 
   async getMessageById(id: number): Promise<MessageDTO> {
@@ -69,6 +72,7 @@ export class ChatService extends BaseService {
         id: true,
         content: true,
         createdAt: true,
+        flatId: true,
         sender: {
           select: {
             id: true,
@@ -77,18 +81,10 @@ export class ChatService extends BaseService {
             role: true,
           },
         },
-        flat: {
-          select: {
-            id: true,
-            address: true,
-            price: true,
-            landlordId: true,
-          },
-        },
         messageAttachments: {
           select: {
             id: true,
-            url: true,
+            filename: true,
           },
         },
       },

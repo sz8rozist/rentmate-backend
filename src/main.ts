@@ -3,7 +3,6 @@ import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filter/global.exception.filter";
 import { BadRequestException, ValidationPipe } from "@nestjs/common";
 import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
-import { Server } from "http";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

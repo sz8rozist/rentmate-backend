@@ -61,7 +61,7 @@ model Message {
 
 model MessageAttachment {
   id        Int     @id @default(autoincrement())
-  url       String
+  filename       String
   messageId Int
   message   Message @relation("MessageAttachments", fields: [messageId], references: [id])
 

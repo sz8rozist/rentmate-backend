@@ -19,6 +19,7 @@ import { DocumentsModule } from "./documents/documents.module";
       playground: true,
       debug: true,
       csrfPrevention: false,
+      uploads: true,
     }),
     AuthModule,
     FileModule,

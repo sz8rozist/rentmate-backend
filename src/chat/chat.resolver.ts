@@ -8,11 +8,12 @@ import {
 import { Server, Socket } from "socket.io";
 import { ChatService } from "./chat.service";
 import { CreateMessageInput } from "./dto/create.message.input";
-import { Args, Int, Mutation, Resolver } from "@nestjs/graphql";
-import type { FileUpload } from "graphql-upload/processRequest.mjs";
+import { FileHelper } from "src/file/file-helper";
+import { Inject } from "@nestjs/common";
+import type { FileStorageService } from "src/file/file-storage-interface";
+import { Args, Int, Mutation } from "@nestjs/graphql";
 import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
-import { UploadAttachmentInput } from "./dto/upload.attachment.input";
-
+import type { FileUpload } from "graphql-upload/processRequest.mjs";
 @WebSocketGateway({
   cors: { origin: "*" },
 })
@@ -20,9 +21,12 @@ export class ChatResolver {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly chatService: ChatService) { }
+  constructor(
+    private readonly chatService: ChatService,
+    @Inject("FileStorageService")
+    private readonly fileService: FileStorageService
+  ) {}
 
-  // Szobához csatlakozás
   @SubscribeMessage("joinRoom")
   async joinRoom(
     @MessageBody() data: { flatId: number },
@@ -50,24 +54,52 @@ export class ChatResolver {
     return message.id;
   }
 
-  // Melléklet feltöltése után
-  @SubscribeMessage("uploadAttachment")
-  async handleAttachment(@MessageBody() input: UploadAttachmentInput, @ConnectedSocket() client: Socket) {
-    await this.chatService.uploadMessageImage(input.file, input.messageId);
-    const message = await this.chatService.getMessageById(input.messageId);
-    const roomName = `flat_${message.flat.id}`;
+  /*@SubscribeMessage("uploadAttachment")
+  async handleAttachment(
+    @MessageBody() input: UploadAttachmentInput,
+    @ConnectedSocket() client: Socket
+  ) {
+    await this.chatService.uploadMessageImage(input, input.messageId);
+    var message = await this.chatService.getMessageById(input.messageId);
+    const messageWithAttachments = await FileHelper.attachSignedAttachmentUrls(
+      message,
+      this.fileService
+    );
+    const roomName = `flat_${messageWithAttachments.flat.id}`;
     this.server.to(roomName).emit("messageAdded", {
-      ...message,
+      ...messageWithAttachments,
     });
+  }*/
+
+  @Mutation(() => Boolean)
+  async uploadAttachment(
+    @Args("messageId", { type: () => Int }) messageId: number,
+    @Args("file", { type: () => GraphQLUpload }) file: FileUpload
+  ): Promise<boolean> {
+    await this.chatService.uploadMessageImage(file, messageId);
+    const message = await this.chatService.getMessageById(messageId);
+    const messageWithAttachments = await FileHelper.attachSignedAttachmentUrls(
+      message,
+      this.fileService
+    );
+    const roomName = `flat_${messageWithAttachments.flatId}`;
+    this.server.to(roomName).emit("messageAdded", {
+      ...messageWithAttachments,
+    });
+    return true;
   }
 
-  // Opció: ha szeretnél lekérni üzeneteket
   @SubscribeMessage("getMessages")
   async getMessages(
     @MessageBody() data: { flatId: number },
     @ConnectedSocket() client: Socket
   ) {
     const messages = await this.chatService.findMessages(data.flatId);
-    client.emit("messages", messages);
+    const messageWithAttachments =
+      await FileHelper.attachSignedAttachmentUrlsToMany(
+        messages,
+        this.fileService
+      );
+    client.emit("messages", messageWithAttachments);
   }
 }

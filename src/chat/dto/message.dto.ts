@@ -4,12 +4,7 @@ export type MessageDTO = {
   id: number;
   content: string;
   createdAt: Date;
-  flat: {
-    id: number;
-    address: string;
-    price: number;
-    landlordId: number;
-  };
+  flatId: number;
   sender: {
     id: number;
     name: string;

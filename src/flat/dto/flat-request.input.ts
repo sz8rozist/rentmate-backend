@@ -1,6 +1,5 @@
 import { InputType, Field, Int } from "@nestjs/graphql";
 import { IsNotEmpty, IsString, IsInt, Min } from "class-validator";
-import { FlatStatus } from "../flat-status";
 
 @InputType()
 export class FlatRequestInput {

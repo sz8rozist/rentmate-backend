@@ -1,4 +1,5 @@
 export type MessageAttachmentDTO = {
   id: number;
-  url: string;
+  filename: string
+  url?: string;
 };

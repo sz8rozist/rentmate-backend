@@ -30,7 +30,8 @@ type UploadFilesResponse {
 
 type MessageAttachment {
   id: ID!
-  url: Float!
+  url: Float
+  filename: String!
   messageId: Float!
   messages: Message!
 }
@@ -130,6 +131,7 @@ type Mutation {
   deleteFlat(flatId: Int!): Boolean!
   addTenantToFlat(flatId: Int!, tenantId: Int!): Boolean!
   removeTenantFromFlat(tenantId: Int!): Boolean!
+  uploadAttachment(messageId: Int!, file: Upload!): Boolean!
   uploadDocument(file: Upload!, data: CreateDocumentInput!): DocumentModel!
   deleteDocument(id: Float!): Boolean!
 }

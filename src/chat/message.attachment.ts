@@ -6,8 +6,11 @@ export class MessageAttachment {
   @Field(() => ID)
   id: number;
 
+  @Field({ nullable: true })
+  url?: number;
+
   @Field()
-  url: number;
+  filename: string;
 
   @Field()
   messageId: number;

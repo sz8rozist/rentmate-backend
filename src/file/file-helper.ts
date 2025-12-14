@@ -1,51 +1,93 @@
 import { FileStorageService } from "src/file/file-storage-interface";
 
+type FileLike = {
+  filename: string;
+  url?: string | null;
+  [key: string]: any;
+};
+
 export interface HasImages {
-  images?: {
-    filename: string;
-    url?: string | null;
-    [key: string]: any;
-  }[];
+  images?: FileLike[];
+}
+
+export interface HasAttachment {
+  messageAttachments?: FileLike[];
 }
 
 export class FileHelper {
-  /**
-   * Egy entitás képeit kiegészíti signed URL-ekkel
-   */
-  static async attachSignedImageUrls<T extends HasImages>(
+  // =========================
+  // INTERNAL GENERIC HELPER
+  // =========================
+  private static async attachSignedUrlsToField<
+    T,
+    K extends keyof T
+  >(
     entity: T,
+    field: K,
     fileService: FileStorageService,
   ): Promise<T> {
-    if (!entity?.images || entity.images.length === 0) {
+    const files = entity[field] as unknown as FileLike[] | undefined;
+
+    if (!files || files.length === 0) {
       return entity;
     }
 
-    const keys = entity.images.map((img) => img.filename);
+    const keys = files.map((f) => f.filename);
     const { urls } = await fileService.getSignedUrls({ keys });
 
-    entity.images = entity.images.map((img, index) => ({
-      ...img,
+    entity[field] = files.map((file, index) => ({
+      ...file,
       url: urls[index],
-    }));
+    })) as any;
 
     return entity;
   }
 
-  /**
-   * Több entitás képeit egészíti ki signed URL-ekkel
-   */
+  // =========================
+  // IMAGES
+  // =========================
+  static async attachSignedImageUrls<T extends HasImages>(
+    entity: T,
+    fileService: FileStorageService,
+  ): Promise<T> {
+    return this.attachSignedUrlsToField(
+      entity,
+      "images",
+      fileService,
+    );
+  }
+
   static async attachSignedImageUrlsToMany<T extends HasImages>(
     entities: T[],
     fileService: FileStorageService,
   ): Promise<T[]> {
-    if (!entities || entities.length === 0) {
-      return entities;
-    }
-
     for (const entity of entities) {
       await this.attachSignedImageUrls(entity, fileService);
     }
+    return entities;
+  }
 
+  // =========================
+  // ATTACHMENTS
+  // =========================
+  static async attachSignedAttachmentUrls<T extends HasAttachment>(
+    entity: T,
+    fileService: FileStorageService,
+  ): Promise<T> {
+    return this.attachSignedUrlsToField(
+      entity,
+      "messageAttachments",
+      fileService,
+    );
+  }
+
+  static async attachSignedAttachmentUrlsToMany<T extends HasAttachment>(
+    entities: T[],
+    fileService: FileStorageService,
+  ): Promise<T[]> {
+    for (const entity of entities) {
+      await this.attachSignedAttachmentUrls(entity, fileService);
+    }
     return entities;
   }
 }
