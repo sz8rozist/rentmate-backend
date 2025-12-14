@@ -7,9 +7,6 @@ export class FlatImage {
   id: number;
 
   @Field()
-  url: string;
-
-  @Field()
   filename: string;
 
   @Field(() => Int)
@@ -18,4 +15,8 @@ export class FlatImage {
   // Kapcsolat (relation)
   @Field(() => Flat)
   flat: Flat;
+
+
+  @Field({ nullable: true })
+  url?: string; 
 }

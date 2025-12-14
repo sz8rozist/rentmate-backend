@@ -1,13 +1,16 @@
-import { HttpStatus, Injectable} from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
 import * as Minio from "minio";
 import { FileUploadResponse } from "./dto/file-upload-dto";
 import { AppException } from "src/common/exception/app.exception";
 import { BaseService } from "src/common/base.service";
+import { SignedUrlsRequest } from "./dto/signed-url-request";
+import { SignedUrlResponse } from "./dto/signed-url-response";
+import { FileStorageService } from "./file-storage-interface";
 
 @Injectable()
-export class FileService extends BaseService {
+export class FileService extends BaseService implements FileStorageService {
   private minioClient: Minio.Client;
   private bucket: string;
   private publicUrl: string;
@@ -88,9 +91,25 @@ export class FileService extends BaseService {
   }
 
   // --------------------
-  // Publikus URL lekérése
+  // Signed URL lekérése (egy vagy több fájlhoz)
   // --------------------
-  getPublicUrl(key: string): string {
-    return `${this.publicUrl}/${key}`;
+  async getSignedUrls(
+    request: SignedUrlsRequest,
+    expiresIn: number = 3600 // alapértelmezett 1 óra
+  ): Promise<SignedUrlResponse> {
+    const urls = await Promise.all(
+    request.keys.map(async (key) => {
+      // 1. generáljuk a presigned URL-t
+      const presigned = await this.minioClient.presignedGetObject(
+        this.bucket,
+        key,
+        expiresIn
+      );
+
+      return presigned
+    })
+  );
+    
+    return new SignedUrlResponse(urls);
   }
 }

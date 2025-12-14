@@ -6,6 +6,6 @@ import { FileModule } from 'src/file/file.module';
 
 @Module({
   providers: [FlatResolver, FlatService],
-  imports: [PrismaModule, FileModule], // Add any necessary imports here, e.g., ConfigModule, PrismaModule
+  imports: [PrismaModule, FileModule],
 })
 export class FlatModule {}

@@ -15,6 +15,10 @@ enum UserRole {
   tenant
 }
 
+type SignedUrlResponse {
+  urls: [String!]!
+}
+
 type FileUploadResponse {
   key: String!
   url: String!
@@ -61,10 +65,10 @@ type User {
 
 type FlatImage {
   id: ID!
-  url: String!
   filename: String!
   flatId: Int!
   flat: Flat!
+  url: String
 }
 
 type Flat {
@@ -97,6 +101,7 @@ type DocumentModel {
 
 type Query {
   tenants(input: TenantRequest): [PublicUser!]!
+  getSignedUrlsToFile(input: SignedUrlsRequest!): SignedUrlResponse!
 
   """Get a flat by its ID"""
   flatById(id: Int!): Flat
@@ -107,6 +112,11 @@ type Query {
 
 input TenantRequest {
   name: String
+}
+
+input SignedUrlsRequest {
+  """Fájl kulcsok listája"""
+  keys: [String!]!
 }
 
 type Mutation {
