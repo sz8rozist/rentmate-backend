@@ -24,4 +24,18 @@ export class UserService {
       orderBy: { name: "asc" },
     });
   }
+
+  async assignFlatToTenant(tenantId: number, flatId: number) {
+    return this.prisma.user.update({
+      where: { id: tenantId },
+      data: { flatId },
+    });
+  }
+
+  async removeFlatFromTenant(tenantId: number) {
+    return this.prisma.user.update({
+      where: { id: tenantId },
+      data: { flatId: null },
+    });
+  }
 }

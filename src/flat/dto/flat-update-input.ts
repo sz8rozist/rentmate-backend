@@ -1,9 +1,16 @@
 import { InputType, Field, Int } from "@nestjs/graphql";
-import { IsNotEmpty, IsString, IsInt, Min } from "class-validator";
+import {
+  IsNotEmpty,
+  IsString,
+  IsInt,
+  Min,
+  isString,
+  IsEnum,
+} from "class-validator";
 import { FlatStatus } from "../flat-status";
 
 @InputType()
-export class FlatRequestInput {
+export class FlatUpdateInput {
   @Field()
   @IsNotEmpty()
   @IsString()
@@ -14,7 +21,7 @@ export class FlatRequestInput {
   @Min(0)
   price: number;
 
-  @Field(() => Int)
-  @IsInt()
-  landlordId: number;
+  @Field(() => FlatStatus)
+  @IsEnum(FlatStatus)
+  status: FlatStatus;
 }

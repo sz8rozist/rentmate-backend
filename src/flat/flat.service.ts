@@ -7,6 +7,7 @@ import { FlatRequestInput } from "./dto/flat-request.input";
 import { BaseService } from "src/common/base.service";
 import type { FileStorageService } from "src/file/file-storage-interface";
 import { FileHelper } from "src/file/file-helper";
+import { FlatUpdateInput } from "./dto/flat-update-input";
 
 @Injectable()
 export class FlatService extends BaseService {
@@ -35,7 +36,9 @@ export class FlatService extends BaseService {
       where: { id: flatId },
       include: {
         images: true,
-        tenants: true,
+        tenants: {
+          where: { flatId: flatId }, // csak azok a tenants, akik tényleg kapcsolódnak
+        },
         landlord: true,
         messages: true,
       },
@@ -67,36 +70,13 @@ export class FlatService extends BaseService {
     return { success: true };
   }
 
-  async updateFlat(
-    flatId: number,
-    data: { address?: string; price?: number; status?: FlatStatus }
-  ) {
-    return this.prisma.flat.update({
+  async updateFlat(flatId: number, data: FlatUpdateInput) {
+    await this.prisma.flat.update({
       where: { id: flatId },
       data,
-      include: {
-        images: true,
-        tenants: true,
-        landlord: true,
-        messages: true,
-      },
     });
-  }
 
-  async addTenantToFlat(flatId: number, tenantId: number) {
-    // Tenant flatId mezőjét beállítjuk
-    return this.prisma.user.update({
-      where: { id: tenantId },
-      data: { flatId },
-    });
-  }
-
-  async removeTenantFromFlat(tenantId: number) {
-    // Tenant flatId mezőjét nullázzuk
-    return this.prisma.user.update({
-      where: { id: tenantId },
-      data: { flatId: null },
-    });
+    return this.getFlatById(flatId);
   }
 
   async getFlatForTenant(tenantId: number) {

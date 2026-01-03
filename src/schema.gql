@@ -127,10 +127,8 @@ type Mutation {
   addFlat(data: FlatRequestInput!): Flat!
   uploadFlatImage(flatId: Int!, image: Upload!): Boolean!
   deleteFlatImage(imageId: Int!): Boolean!
-  updateFlat(flatId: Int!, data: FlatRequestInput!): Flat!
+  updateFlat(flatId: Int!, data: FlatUpdateInput!): Flat!
   deleteFlat(flatId: Int!): Boolean!
-  addTenantToFlat(flatId: Int!, tenantId: Int!): Boolean!
-  removeTenantFromFlat(tenantId: Int!): Boolean!
   uploadAttachment(messageId: Int!, file: Upload!): Boolean!
   uploadDocument(file: Upload!, data: CreateDocumentInput!): DocumentModel!
   deleteDocument(id: Float!): Boolean!
@@ -155,6 +153,12 @@ input FlatRequestInput {
   address: String!
   price: Int!
   landlordId: Int!
+}
+
+input FlatUpdateInput {
+  address: String!
+  price: Int!
+  status: FlatStatus!
 }
 
 input CreateDocumentInput {
