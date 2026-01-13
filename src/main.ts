@@ -1,8 +1,9 @@
-import { NestFactory } from "@nestjs/core";
+import { NestFactory, Reflector } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { AllExceptionsFilter } from "./common/filter/global.exception.filter";
 import { BadRequestException, ValidationPipe } from "@nestjs/common";
 import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
+import { GlobalExceptionFilter } from "./common/exception/global.exception.filter";
+import { JwtAuthGuard } from "./auth/jwt/jwt-auth.guard";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,13 +14,6 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-      exceptionFactory: (errors) => {
-        const formattedErrors = errors.map((err) => ({
-          field: err.property,
-          messages: Object.values(err.constraints!),
-        }));
-        return new BadRequestException(formattedErrors);
-      },
     })
   );
 
@@ -31,8 +25,9 @@ async function bootstrap() {
   });
   app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 5 }));
 
-  app.useGlobalFilters(new AllExceptionsFilter());
-
+  app.useGlobalFilters(new GlobalExceptionFilter());
+  const reflector = app.get(Reflector);
+  app.useGlobalGuards(new JwtAuthGuard(reflector));
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

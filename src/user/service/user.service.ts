@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
-import { UserRole } from "../user-role";
 
 @Injectable()
 export class UserService {
@@ -9,14 +8,14 @@ export class UserService {
   async getTenants(name?: string) {
     if (!name || name.trim() === "") {
       return this.prisma.user.findMany({
-        where: { role: UserRole.tenant },
+        where: { role: "tenant" },
         orderBy: { name: "asc" },
       });
     }
 
     return this.prisma.user.findMany({
       where: {
-        role: UserRole.tenant,
+        role: "tenant",
         name: {
           contains: name,
         },

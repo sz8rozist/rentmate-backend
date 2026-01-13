@@ -1,5 +1,5 @@
 import { ObjectType, Field, ID, Int } from "@nestjs/graphql";
-import { User } from "src/auth/user";
+import { User } from "src/user/user";
 import { FlatImage } from "./flat-image";
 import { FlatStatus } from "./flat-status";
 import { Message } from "src/chat/message";
