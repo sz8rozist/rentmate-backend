@@ -15,17 +15,29 @@ enum UserRole {
   tenant
 }
 
-type SignedUrlResponse {
-  urls: [String!]!
+type FlatImage {
+  id: ID!
+  filename: String!
+  flatId: Int!
+  flat: Flat!
+  url: String
 }
 
-type FileUploadResponse {
-  key: String!
-  url: String!
+type Flat {
+  id: ID!
+  address: String!
+  price: Int!
+  status: FlatStatus!
+  landlordId: Int!
+  landlord: User!
+  images: [FlatImage!]
+  messages: [Message!]!
+  tenants: [User!]!
 }
 
-type UploadFilesResponse {
-  files: [FileUploadResponse!]!
+enum FlatStatus {
+  available
+  rented
 }
 
 type MessageAttachment {
@@ -64,29 +76,17 @@ type User {
   flat: Flat
 }
 
-type FlatImage {
-  id: ID!
-  filename: String!
-  flatId: Int!
-  flat: Flat!
-  url: String
+type SignedUrlResponse {
+  urls: [String!]!
 }
 
-type Flat {
-  id: ID!
-  address: String!
-  price: Int!
-  status: FlatStatus!
-  landlordId: Int!
-  landlord: User!
-  images: [FlatImage!]
-  messages: [Message!]!
-  tenants: [User!]!
+type FileUploadResponse {
+  key: String!
+  url: String!
 }
 
-enum FlatStatus {
-  available
-  rented
+type UploadFilesResponse {
+  files: [FileUploadResponse!]!
 }
 
 type DocumentModel {
@@ -123,6 +123,8 @@ input SignedUrlsRequest {
 type Mutation {
   login(email: String!, password: String!): String!
   register(data: RegisterInput!): PublicUser!
+  assignFlatToTenant(tenantId: Int!, flatId: Int!): User!
+  removeFlatFromTenant(tenantId: Int!): User!
   uploadFiles(input: UploadFilesInput!): UploadFilesResponse!
   addFlat(data: FlatRequestInput!): Flat!
   uploadFlatImage(flatId: Int!, image: Upload!): Boolean!
