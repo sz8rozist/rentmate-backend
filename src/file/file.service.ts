@@ -56,7 +56,7 @@ export class FileService extends BaseService implements FileStorageService {
         `A fájl feltöltés sikertelen: ${objectName}: ${err.message}`,
         err.stack,
       );
-      throw new BusinessValidationException(`A fájl feltöltés sikertelen.`);
+      throw new BusinessValidationException({ file: "A fájl feltöltés sikertelen." });
     }
   }
 

@@ -4,6 +4,7 @@ import {
   Catch,
   ArgumentsHost,
   HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { BusinessValidationException } from './business.validation.exception';
@@ -11,13 +12,24 @@ import { BusinessValidationException } from './business.validation.exception';
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
-    const response = host.switchToHttp().getResponse<Response>();
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
 
+    // Üzleti hiba
     if (exception instanceof BusinessValidationException) {
       return response.status(HttpStatus.BAD_REQUEST).json({
         statusCode: 400,
         message: exception.message,
         type: 'BUSINESS_ERROR',
+      });
+    }
+
+    // JWT / authentikációs hiba
+    if (exception instanceof UnauthorizedException) {
+      return response.status(HttpStatus.UNAUTHORIZED).json({
+        statusCode: 401,
+        message: exception.message || 'Unauthorized',
+        type: 'AUTH_ERROR',
       });
     }
 

@@ -5,6 +5,7 @@ import type { FileStorageService } from "src/file/file-storage-interface";
 import { CreateFlatDto } from "src/flat/dto/create-flat.dto";
 import { BusinessValidationException } from "src/common/exception/business.validation.exception";
 import { UpdateFlatDto } from "src/flat/dto/update-flat.dto";
+import { Flat } from "@prisma/client";
 
 @Injectable()
 export class FlatService extends BaseService {
@@ -15,7 +16,7 @@ export class FlatService extends BaseService {
     super(FlatService.name);
   }
 
-  async addFlat(dto: CreateFlatDto) {
+  async addFlat(dto: CreateFlatDto): Promise<Flat> {
     return await this.prisma.flat.create({
       data: dto,
     });
@@ -27,7 +28,7 @@ export class FlatService extends BaseService {
     });
 
     if (!flat) {
-      throw new BusinessValidationException(`Flat with id ${flatId} not found`);
+      throw new BusinessValidationException({ flatId: `Flat with id ${flatId} not found` });
     }
 
     return flat;
@@ -46,7 +47,7 @@ export class FlatService extends BaseService {
     // Végül magát a lakást töröljük
     await this.prisma.flat.delete({ where: { id: flatId } });
 
-    return { success: true };
+    return true;
   }
 
   async updateFlat(flatId: number, data: UpdateFlatDto) {
@@ -75,14 +76,12 @@ export class FlatService extends BaseService {
 
   async uploadFlatImage(flatId: number, image: Express.Multer.File) {
     const fileUploadResult = await this.fileService.uploadFile(image);
-    await this.prisma.flatImage.create({
+    return await this.prisma.flatImage.create({
       data: {
         filename: fileUploadResult.filename,
         flatId: flatId,
       },
     });
-
-    return true;
   }
 
   async deleteFlatImage(imageId: number) {
@@ -90,9 +89,9 @@ export class FlatService extends BaseService {
       where: { id: imageId },
     });
     if (!image) {
-      throw new BusinessValidationException(
-        `Image with id ${imageId} not found`,
-      );
+      throw new BusinessValidationException({
+        imageId: `Image with id ${imageId} not found`,
+      });
     }
     await this.fileService.deleteFile(`${image.filename}`);
     return this.prisma.flatImage.delete({

@@ -4,6 +4,7 @@ import { ValidationPipe } from "@nestjs/common";
 import { GlobalExceptionFilter } from "./common/exception/global.exception.filter";
 import { JwtAuthGuard } from "./auth/jwt/jwt-auth.guard";
 import { BusinessValidationException } from "./common/exception/business.validation.exception";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -40,8 +41,21 @@ async function bootstrap() {
   });
 
   app.useGlobalFilters(new GlobalExceptionFilter());
-  const reflector = app.get(Reflector);
-  app.useGlobalGuards(new JwtAuthGuard(reflector));
+
+  // Swagger konfiguráció
+  const config = new DocumentBuilder()
+    .setTitle("RentMate API")
+    .setDescription("RentMate REST API dokumentációja")
+    .setVersion("1.0")
+    .addBearerAuth(
+      { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+      "JWT",
+    ) // ✅ itt a JWT auth
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup("api", app, document); // http://localhost:3000/api
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
