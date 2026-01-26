@@ -22,7 +22,7 @@ import { UpdateFlatDto } from "src/flat/dto/update-flat.dto";
 import { FlatService } from "src/flat/service/flat-service/flat.service";
 
 @ApiTags('Flat')
-@Controller("flat-controller")
+@Controller("flat")
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT')
 export class FlatControllerController {

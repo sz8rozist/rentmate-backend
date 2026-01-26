@@ -6,7 +6,7 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { LoginResponse } from "../dto/login.response";
 import { RegisterResponse } from "../dto/register.response";
 
-@ApiTags("Autentikáció")
+@ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
   constructor(private auth: AuthService) {}
