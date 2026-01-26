@@ -1,7 +1,6 @@
 import { NestFactory, Reflector } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { BadRequestException, ValidationPipe } from "@nestjs/common";
-import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
+import { ValidationPipe } from "@nestjs/common";
 import { GlobalExceptionFilter } from "./common/exception/global.exception.filter";
 import { JwtAuthGuard } from "./auth/jwt/jwt-auth.guard";
 
@@ -23,7 +22,6 @@ async function bootstrap() {
     credentials: false,
     maxHttpBufferSize: 1e8, // 100 MB, vagy ami kell
   });
-  app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 5 }));
 
   app.useGlobalFilters(new GlobalExceptionFilter());
   const reflector = app.get(Reflector);

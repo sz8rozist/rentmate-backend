@@ -1,9 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
+import { BaseService } from "src/common/base.service";
 
 @Injectable()
-export class UserService {
-  constructor(private prisma: PrismaService) {}
+export class UserService extends BaseService {
+  constructor(private prisma: PrismaService) {
+    super(UserService.name);
+  }
 
   async getTenants(name?: string) {
     if (!name || name.trim() === "") {

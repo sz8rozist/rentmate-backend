@@ -1,13 +1,10 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
 import * as Minio from "minio";
-import { FileUploadResponse } from "./dto/file-upload-dto";
-import { AppException } from "src/common/exception/app.exception";
 import { BaseService } from "src/common/base.service";
-import { SignedUrlsRequest } from "./dto/signed-url-request";
-import { SignedUrlResponse } from "./dto/signed-url-response";
-import { FileStorageService } from "./file-storage-interface";
+import { FileStorageService, FileUploadResult } from "./file-storage-interface";
+import { BusinessValidationException } from "src/common/exception/business.validation.exception";
+import { Readable } from "stream";
 
 @Injectable()
 export class FileService extends BaseService implements FileStorageService {
@@ -26,11 +23,11 @@ export class FileService extends BaseService implements FileStorageService {
       secretKey: this.configService.get<string>("MINIO_SECRET_KEY") ?? "",
     });
   }
-  async uploadFile(file: FileUpload): Promise<FileUploadResponse> {
-    const { createReadStream, filename, mimetype } = file;
-    this.logger.debug(`Uploading file: ${filename}, type: ${mimetype}`);
-    const objectName = `${Date.now()}-${filename}`;
-    const stream = createReadStream();
+  async uploadFile(file: Express.Multer.File): Promise<FileUploadResult> {
+    this.logger.debug(
+      `Uploading file: ${file.originalname}, type: ${file.mimetype}`,
+    );
+    const objectName = `${Date.now()}-${file.originalname}`;
 
     try {
       const exists = await this.minioClient.bucketExists(this.bucket);
@@ -42,31 +39,27 @@ export class FileService extends BaseService implements FileStorageService {
       await this.minioClient.putObject(
         this.bucket,
         objectName,
-        stream,
-        undefined,
+        file.buffer,
+        file.size,
         {
-          "Content-Type": mimetype,
-        }
+          "Content-Type": file.mimetype,
+        },
       );
 
-      const url = `${this.publicUrl}/${objectName}`;
       this.logger.log(`Fájl feltöltve a MinIO-ba: ${objectName}`);
-      return { key: objectName, url };
+      return {
+        filename: objectName,
+        path: objectName,
+      };
     } catch (err) {
       this.logger.error(
-        `A fájl feltöltés sikertelen: ${filename}: ${err.message}`,
-        err.stack
+        `A fájl feltöltés sikertelen: ${objectName}: ${err.message}`,
+        err.stack,
       );
-      throw new AppException(
-        `A fájl feltöltés sikertelen.`,
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      throw new BusinessValidationException(`A fájl feltöltés sikertelen.`);
     }
   }
 
-  // --------------------
-  // Fájl törlése MinIO-ból
-  // --------------------
   async deleteFile(key: string): Promise<void> {
     try {
       await this.minioClient.removeObject(this.bucket, key);
@@ -77,39 +70,15 @@ export class FileService extends BaseService implements FileStorageService {
     }
   }
 
-  // --------------------
-  // Fájl létezésének ellenőrzése
-  // --------------------
-  async fileExists(key: string): Promise<boolean> {
-    try {
-      await this.minioClient.statObject(this.bucket, key);
-      return true;
-    } catch (err) {
-      if (err.code === "NotFound") return false;
-      throw err;
-    }
+  async getStream(path: string): Promise<Readable> {
+    return this.minioClient.getObject(this.bucket, path);
   }
 
-  // --------------------
-  // Signed URL lekérése (egy vagy több fájlhoz)
-  // --------------------
-  async getSignedUrls(
-    request: SignedUrlsRequest,
-    expiresIn: number = 3600 // alapértelmezett 1 óra
-  ): Promise<SignedUrlResponse> {
-    const urls = await Promise.all(
-    request.keys.map(async (key) => {
-      // 1. generáljuk a presigned URL-t
-      const presigned = await this.minioClient.presignedGetObject(
-        this.bucket,
-        key,
-        expiresIn
-      );
+  getPublicUrl(path: string): string {
+    // 👉 opció A: backend streameli
+    return `${this.publicUrl}/files/${path}`;
 
-      return presigned
-    })
-  );
-    
-    return new SignedUrlResponse(urls);
+    // 👉 opció B (később): presigned URL
+    // return await this.minioClient.presignedGetObject(this.bucket, path, 60 * 5);
   }
 }

@@ -11,7 +11,7 @@ export const fileStorageProvider = {
     if (storageType === "minio") {
       return new FileService(configService);
     } else {
-      return new MockFileService();
+      return new MockFileService(MockFileService.name);
     }
   },
   inject: [ConfigService],

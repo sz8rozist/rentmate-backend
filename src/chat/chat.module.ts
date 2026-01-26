@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
-import { ChatResolver } from './chat.resolver';
-import { ChatService } from './chat.service';
-import { FileModule } from 'src/file/file.module';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { Module } from "@nestjs/common";
+import { ChatService } from "./service/chat.service";
+import { FileModule } from "src/file/file.module";
+import { PrismaModule } from "src/prisma/prisma.module";
+import { ChatControllerController } from './controller/chat-controller/chat-controller.controller';
 @Module({
-  providers: [ChatResolver, ChatService],
-  imports: [PrismaModule,FileModule]
+  providers: [ChatService],
+  imports: [PrismaModule, FileModule],
+  controllers: [ChatControllerController],
 })
 export class ChatModule {}

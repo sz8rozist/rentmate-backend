@@ -1,29 +1,22 @@
-import { FileUpload } from "graphql-upload/GraphQLUpload.mjs";
-import { FileUploadResponse } from "./dto/file-upload-dto";
-import { SignedUrlsRequest } from "./dto/signed-url-request";
-import { SignedUrlResponse } from "./dto/signed-url-response";
+import { Readable } from "stream";
+
+export interface FileUploadResult {
+  filename: string;
+  path: string;
+}
 
 export interface FileStorageService {
   /**
    * Fájl feltöltése
    */
-  uploadFile(file: FileUpload): Promise<FileUploadResponse>;
+  uploadFile(file: Express.Multer.File): Promise<FileUploadResult>;
 
   /**
    * Fájl törlése
    */
   deleteFile(key: string): Promise<void>;
 
-  /**
-   * Fájl létezésének ellenőrzése
-   */
-  fileExists(key: string): Promise<boolean>;
+  getStream(path: string): Promise<Readable>;
 
-  /**
-   * Signed URL-ek generálása letöltéshez
-   */
-  getSignedUrls(
-    request: SignedUrlsRequest,
-    expiresIn?: number
-  ): Promise<SignedUrlResponse>;
+  getPublicUrl(path: string): string;
 }
