@@ -41,7 +41,7 @@ export class ChatService {
       include: { messageAttachments: true },
     });
     if (!messageWithFiles) {
-      throw new BusinessValidationException("Üzenet létrehozása sikertelen");
+      throw new BusinessValidationException({ message: "Üzenet létrehozása sikertelen" });
     }
     return {
       ...messageWithFiles,
